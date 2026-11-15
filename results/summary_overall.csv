@@ -1,0 +1,6 @@
+model,MASE,coverage80,coverage95,interval_score80,n
+AutoETS,1.01,0.718,0.887,4.758,2310
+AutoARIMA,1.015,0.719,0.886,4.865,2310
+AutoTheta,1.04,0.681,0.848,4.99,2310
+SeasonalNaive,1.247,0.732,0.891,5.829,2310
+Naive,1.271,0.83,0.95,5.922,2310
