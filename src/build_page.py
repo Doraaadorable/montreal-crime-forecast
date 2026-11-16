@@ -66,6 +66,8 @@ def main() -> None:
                                  for c in ["All", "h1", "h3", "h6"]]}
                      for key, label in DISTRICT_ROWS.items()],
         },
+        "alarms": {cat: g[["month", "direction"]].to_dict("records")
+                   for cat, g in pd.read_csv(RESULTS / "monitoring_alarms.csv").groupby("category")},
         "downloaded": f"{downloaded:%B} {downloaded.day}, {downloaded:%Y}",
     }
     template = (ROOT / "site" / "page.html").read_text(encoding="utf-8")

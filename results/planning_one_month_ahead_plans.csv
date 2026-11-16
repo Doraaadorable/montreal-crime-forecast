@@ -1,0 +1,7 @@
+,shortfall_rate,spare_capacity_pct,cost
+ETS 90th percentile,0.145,15.206,0.181
+"ETS forecast, no margin",0.517,4.841,0.403
+ETS forecast + 10%,0.273,11.183,0.22
+ETS forecast + 20%,0.106,19.664,0.185
+Last year's count + 10%,0.356,14.615,0.462
+Last year's count + 20%,0.234,22.251,0.361

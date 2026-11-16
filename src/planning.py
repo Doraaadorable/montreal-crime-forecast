@@ -84,6 +84,10 @@ def main() -> None:
     by_month.to_csv(RESULTS / "planning_one_month_ahead.csv")
     print("\nOne month ahead, 90th percentile plan, share of calendar months short:\n",
           by_month.round(3).to_string())
+    h1 = (ets["horizon"] == 1)
+    one_plans = pd.DataFrame({name: score(ets[h1], plan[h1]) for name, plan in plans.items()}).T
+    one_plans.round(3).to_csv(RESULTS / "planning_one_month_ahead_plans.csv")
+    print("\nOne month ahead, all plans:\n", one_plans.round(3).to_string())
     yearly = months.groupby(months.index.year).mean().mean(axis=1).round(3)
     yearly.to_csv(RESULTS / "planning_one_month_ahead_by_year.csv", header=["share_short"])
     print("\nSame, by year (average of the five categories):\n", yearly.to_string())
