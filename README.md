@@ -55,8 +55,8 @@ favours the first method. An interval that includes 1 means the two cannot be se
 No clear difference was detected between ETS and ARIMA, or between a pooled gradient-boosting
 model and the top-down split.
 
-All 15 comparisons in the [full table](docs/FINDINGS.md) were rerun with bootstrap blocks of 6
-and 18, on each half of the test period, and without scoring the newest three months. Twelve
+All 13 comparisons in the [full table](docs/FINDINGS.md) were rerun with bootstrap blocks of 6
+and 18, on each half of the test period, and without scoring the newest three months. Ten
 keep the same reading. Three change with the check: the six-month gain, the forecast average
 against ETS, and the pooled model against the top-down split.
 
