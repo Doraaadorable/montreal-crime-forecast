@@ -65,12 +65,18 @@ def add_ensemble(long: pd.DataFrame) -> pd.DataFrame:
 def main() -> None:
     long = add_ensemble(pd.read_parquet(RESULTS / "backtest_forecasts.parquet"))
     by_model = {m: g for m, g in long.groupby("model")}
-    loss = "abs_scaled_error"
-    rows: list = []
+    rec = pd.read_parquet(RESULTS / "hierarchy_forecasts.parquet")
+    rec = rec[rec["level"] == "Category x district"]
+    district = {m: g for m, g in rec.groupby("method")}
+    district["Global"] = pd.read_parquet(RESULTS / "hierarchy_global_forecasts.parquet")
+    ets_d, naive_d = "ETS base (not coherent)", "Same month last year"
+
+    # (label, forecasts of method A, forecasts of method B, loss column)
+    pairs: list = []
 
     def city(a: str, b: str, label: str, mask=lambda d: slice(None)) -> None:
         da, db = by_model[a], by_model[b]
-        compare(rows, label, per_origin(da[mask(da)], loss), per_origin(db[mask(db)], loss))
+        pairs.append((label, da[mask(da)], db[mask(db)], "abs_scaled_error"))
 
     city("AutoETS", "SeasonalNaive", "Citywide: ETS vs same month last year")
     city("AutoETS", "SeasonalNaive", "  1 month ahead", lambda d: d["horizon"] == 1)
@@ -80,62 +86,51 @@ def main() -> None:
     city("AutoARIMA", "AutoETS", "Citywide: ARIMA vs ETS")
     city("Ensemble", "AutoETS", "Citywide: ensemble vs ETS")
     city("Ensemble", "SeasonalNaive", "Citywide: ensemble vs same month last year")
+    for a, b, label in [("Global", "Top-down", "District: global model vs top-down"),
+                        ("Global", ets_d, "District: global model vs separate ETS"),
+                        ("Top-down", ets_d, "District: top-down vs separate ETS"),
+                        (ets_d, naive_d, "District: separate ETS vs same month last year")]:
+        pairs.append((label, district[a], district[b], "abs_error"))
 
-    rec = pd.read_parquet(RESULTS / "hierarchy_forecasts.parquet")
-    rec = rec[rec["level"] == "Category x district"]
-    gbm = pd.read_parquet(RESULTS / "hierarchy_global_forecasts.parquet")
-    bottom = {m: per_origin(g, "abs_error") for m, g in rec.groupby("method")}
-    bottom["Global"] = per_origin(gbm, "abs_error")
-    compare(rows, "District: global model vs top-down", bottom["Global"], bottom["Top-down"])
-    compare(rows, "District: global model vs separate ETS", bottom["Global"],
-            bottom["ETS base (not coherent)"])
-    compare(rows, "District: top-down vs separate ETS", bottom["Top-down"],
-            bottom["ETS base (not coherent)"])
-    compare(rows, "District: separate ETS vs same month last year",
-            bottom["ETS base (not coherent)"], bottom["Same month last year"])
-
-    # Robustness of the headline comparisons to three analysis choices.
-    ets, naive = by_model["AutoETS"], by_model["SeasonalNaive"]
-    last = long["ds"].max()
-    headline = {
-        "Citywide: ETS vs same month last year": (per_origin(ets, loss), per_origin(naive, loss)),
-        "  6 months ahead": (per_origin(ets[ets["horizon"] == 6], loss),
-                             per_origin(naive[naive["horizon"] == 6], loss)),
-        "District: top-down vs separate ETS": (bottom["Top-down"], bottom["ETS base (not coherent)"]),
-        "District: global model vs top-down": (bottom["Global"], bottom["Top-down"]),
-    }
+    rows: list = []
     robust = []
-    for label, (a, b) in headline.items():
-        for block in (6, 12, 18):  # bootstrap block length
-            r, lo, hi = block_bootstrap_ratio(a.to_numpy(), b.to_numpy(), block=block)
-            robust.append({"comparison": label, "check": f"block of {block}", "error_ratio": round(r, 3),
-                           "ci_low": round(lo, 3), "ci_high": round(hi, 3)})
-        for name, mask in (("origins to 2022-12", a.index <= "2022-12-31"),
-                           ("origins from 2023-01", a.index > "2022-12-31")):
-            r, lo, hi = block_bootstrap_ratio(a[mask].to_numpy(), b[mask].to_numpy())
-            robust.append({"comparison": label, "check": name, "error_ratio": round(r, 3),
-                           "ci_low": round(lo, 3), "ci_high": round(hi, 3)})
-    # Recent months can still be revised: drop the newest 1 to 3 target months.
-    for k in (1, 2, 3):
-        keep = lambda d: d[d["ds"] <= last - pd.DateOffset(months=k)]
-        r, lo, hi = block_bootstrap_ratio(per_origin(keep(ets), loss).to_numpy(),
-                                          per_origin(keep(naive), loss).to_numpy())
-        robust.append({"comparison": "Citywide: ETS vs same month last year",
-                       "check": f"without newest {k} month(s)", "error_ratio": round(r, 3),
-                       "ci_low": round(lo, 3), "ci_high": round(hi, 3)})
+    last = long["ds"].max()
+
+    def add(label: str, check: str, a: pd.Series, b: pd.Series, block: int = BLOCK) -> None:
+        r, lo, hi = block_bootstrap_ratio(a.to_numpy(), b.to_numpy(), block=block)
+        verdict = "A better" if hi < 1 else "B better" if lo > 1 else "no clear difference"
+        robust.append({"comparison": label.strip(), "check": check, "error_ratio": round(r, 3),
+                       "ci_low": round(lo, 3), "ci_high": round(hi, 3), "verdict": verdict})
+
+    # Every comparison gets the same four checks.
+    for label, fa, fb, loss in pairs:
+        a, b = per_origin(fa, loss), per_origin(fb, loss)
+        compare(rows, label, a, b)
+        for block in (6, 12, 18):
+            add(label, f"block of {block}", a, b, block)
+        early = a.index <= "2022-12-31"
+        add(label, "origins to 2022-12", a[early], b[early])
+        add(label, "origins from 2023-01", a[~early], b[~early])
+        # Are the last three months of the data driving the result? This drops their
+        # scores only; it does not re-run the backtest with delayed data.
+        cut = last - pd.DateOffset(months=3)
+        add(label, "newest 3 target months not scored",
+            per_origin(fa[fa["ds"] <= cut], loss), per_origin(fb[fb["ds"] <= cut], loss))
+
     robust = pd.DataFrame(robust)
     robust.to_csv(RESULTS / "significance_robustness.csv", index=False)
-
+    stable = (robust.groupby("comparison", sort=False)["verdict"]
+              .agg(lambda v: v.iloc[1] if v.nunique() == 1 else "changes with the check"))
     table = pd.DataFrame(rows).set_index("comparison")
+    table["verdict"] = table["verdict"].replace("not distinguishable", "no clear difference")
+    table["across_all_checks"] = stable.to_numpy()
     table.to_csv(RESULTS / "significance.csv")
-    pd.set_option("display.width", 200)
-    print(table)
-    print("\nRobustness:\n", robust.to_string(index=False))
+    pd.set_option("display.width", 220)
+    print(table[["error_ratio", "ci_low", "ci_high", "verdict", "across_all_checks"]])
+    changed = robust[robust["comparison"].isin(stable[stable == "changes with the check"].index)]
+    print("\nComparisons whose reading changes:\n", changed.to_string(index=False))
     ens = long.groupby("model")["abs_scaled_error"].mean().round(3).sort_values()
     print("\nCitywide MASE including the ensemble:\n", ens)
-    print("\nEnsemble MASE by category:\n",
-          long[long["model"].isin(["Ensemble", "AutoETS"])]
-          .groupby(["unique_id", "model"])["abs_scaled_error"].mean().unstack().round(3))
 
 
 if __name__ == "__main__":

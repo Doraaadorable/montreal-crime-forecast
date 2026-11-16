@@ -1,24 +1,91 @@
-comparison,check,error_ratio,ci_low,ci_high
-Citywide: ETS vs same month last year,block of 6,0.81,0.712,0.887
-Citywide: ETS vs same month last year,block of 12,0.81,0.707,0.863
-Citywide: ETS vs same month last year,block of 18,0.81,0.709,0.862
-Citywide: ETS vs same month last year,origins to 2022-12,0.796,0.636,0.898
-Citywide: ETS vs same month last year,origins from 2023-01,0.828,0.753,0.869
-  6 months ahead,block of 6,0.917,0.774,1.045
-  6 months ahead,block of 12,0.917,0.81,0.989
-  6 months ahead,block of 18,0.917,0.811,0.994
-  6 months ahead,origins to 2022-12,0.875,0.733,0.965
-  6 months ahead,origins from 2023-01,0.974,0.883,1.046
-District: top-down vs separate ETS,block of 6,0.95,0.925,0.973
-District: top-down vs separate ETS,block of 12,0.95,0.928,0.971
-District: top-down vs separate ETS,block of 18,0.95,0.928,0.973
-District: top-down vs separate ETS,origins to 2022-12,0.932,0.895,0.956
-District: top-down vs separate ETS,origins from 2023-01,0.968,0.961,0.982
-District: global model vs top-down,block of 6,0.987,0.974,1.004
-District: global model vs top-down,block of 12,0.987,0.977,1.001
-District: global model vs top-down,block of 18,0.987,0.978,1.001
-District: global model vs top-down,origins to 2022-12,0.99,0.986,1.012
-District: global model vs top-down,origins from 2023-01,0.983,0.973,1.0
-Citywide: ETS vs same month last year,without newest 1 month(s),0.81,0.706,0.863
-Citywide: ETS vs same month last year,without newest 2 month(s),0.809,0.706,0.863
-Citywide: ETS vs same month last year,without newest 3 month(s),0.808,0.706,0.863
+comparison,check,error_ratio,ci_low,ci_high,verdict
+Citywide: ETS vs same month last year,block of 6,0.81,0.712,0.887,A better
+Citywide: ETS vs same month last year,block of 12,0.81,0.707,0.863,A better
+Citywide: ETS vs same month last year,block of 18,0.81,0.709,0.862,A better
+Citywide: ETS vs same month last year,origins to 2022-12,0.796,0.636,0.898,A better
+Citywide: ETS vs same month last year,origins from 2023-01,0.828,0.753,0.869,A better
+Citywide: ETS vs same month last year,newest 3 target months not scored,0.808,0.706,0.863,A better
+1 month ahead,block of 6,0.603,0.517,0.667,A better
+1 month ahead,block of 12,0.603,0.511,0.656,A better
+1 month ahead,block of 18,0.603,0.517,0.642,A better
+1 month ahead,origins to 2022-12,0.608,0.458,0.704,A better
+1 month ahead,origins from 2023-01,0.597,0.516,0.635,A better
+1 month ahead,newest 3 target months not scored,0.603,0.511,0.656,A better
+6 months ahead,block of 6,0.917,0.774,1.045,no clear difference
+6 months ahead,block of 12,0.917,0.81,0.989,A better
+6 months ahead,block of 18,0.917,0.811,0.994,A better
+6 months ahead,origins to 2022-12,0.875,0.733,0.965,A better
+6 months ahead,origins from 2023-01,0.974,0.883,1.046,no clear difference
+6 months ahead,newest 3 target months not scored,0.911,0.81,0.984,A better
+Break and enter,block of 6,0.965,0.847,1.09,no clear difference
+Break and enter,block of 12,0.965,0.825,1.103,no clear difference
+Break and enter,block of 18,0.965,0.815,1.102,no clear difference
+Break and enter,origins to 2022-12,0.927,0.856,1.108,no clear difference
+Break and enter,origins from 2023-01,1.029,0.963,1.241,no clear difference
+Break and enter,newest 3 target months not scored,0.963,0.825,1.103,no clear difference
+Mischief,block of 6,0.82,0.666,0.966,A better
+Mischief,block of 12,0.82,0.7,0.921,A better
+Mischief,block of 18,0.82,0.697,0.942,A better
+Mischief,origins to 2022-12,0.976,0.799,0.98,A better
+Mischief,origins from 2023-01,0.704,0.598,0.792,A better
+Mischief,newest 3 target months not scored,0.815,0.697,0.921,A better
+Robbery,block of 6,0.898,0.752,1.068,no clear difference
+Robbery,block of 12,0.898,0.76,1.079,no clear difference
+Robbery,block of 18,0.898,0.784,1.064,no clear difference
+Robbery,origins to 2022-12,0.849,0.658,1.015,no clear difference
+Robbery,origins from 2023-01,0.967,0.765,1.263,no clear difference
+Robbery,newest 3 target months not scored,0.899,0.76,1.08,no clear difference
+Theft from vehicle,block of 6,0.809,0.673,0.911,A better
+Theft from vehicle,block of 12,0.809,0.699,0.852,A better
+Theft from vehicle,block of 18,0.809,0.705,0.86,A better
+Theft from vehicle,origins to 2022-12,0.784,0.653,0.817,A better
+Theft from vehicle,origins from 2023-01,0.845,0.709,0.954,A better
+Theft from vehicle,newest 3 target months not scored,0.807,0.698,0.851,A better
+Vehicle theft,block of 6,0.698,0.525,0.892,A better
+Vehicle theft,block of 12,0.698,0.532,0.855,A better
+Vehicle theft,block of 18,0.698,0.539,0.807,A better
+Vehicle theft,origins to 2022-12,0.657,0.463,0.993,A better
+Vehicle theft,origins from 2023-01,0.763,0.532,0.856,A better
+Vehicle theft,newest 3 target months not scored,0.696,0.532,0.855,A better
+Citywide: ARIMA vs ETS,block of 6,1.004,0.944,1.08,no clear difference
+Citywide: ARIMA vs ETS,block of 12,1.004,0.945,1.093,no clear difference
+Citywide: ARIMA vs ETS,block of 18,1.004,0.958,1.102,no clear difference
+Citywide: ARIMA vs ETS,origins to 2022-12,1.037,0.945,1.161,no clear difference
+Citywide: ARIMA vs ETS,origins from 2023-01,0.962,0.906,1.011,no clear difference
+Citywide: ARIMA vs ETS,newest 3 target months not scored,1.003,0.945,1.093,no clear difference
+Citywide: ensemble vs ETS,block of 6,0.971,0.95,0.997,A better
+Citywide: ensemble vs ETS,block of 12,0.971,0.951,1.002,no clear difference
+Citywide: ensemble vs ETS,block of 18,0.971,0.952,1.003,no clear difference
+Citywide: ensemble vs ETS,origins to 2022-12,0.985,0.953,1.02,no clear difference
+Citywide: ensemble vs ETS,origins from 2023-01,0.953,0.938,0.96,A better
+Citywide: ensemble vs ETS,newest 3 target months not scored,0.97,0.951,1.002,no clear difference
+Citywide: ensemble vs same month last year,block of 6,0.787,0.696,0.859,A better
+Citywide: ensemble vs same month last year,block of 12,0.787,0.697,0.833,A better
+Citywide: ensemble vs same month last year,block of 18,0.787,0.705,0.835,A better
+Citywide: ensemble vs same month last year,origins to 2022-12,0.785,0.643,0.867,A better
+Citywide: ensemble vs same month last year,origins from 2023-01,0.789,0.716,0.822,A better
+Citywide: ensemble vs same month last year,newest 3 target months not scored,0.784,0.696,0.833,A better
+District: global model vs top-down,block of 6,0.987,0.974,1.004,no clear difference
+District: global model vs top-down,block of 12,0.987,0.977,1.001,no clear difference
+District: global model vs top-down,block of 18,0.987,0.978,1.001,no clear difference
+District: global model vs top-down,origins to 2022-12,0.99,0.986,1.012,no clear difference
+District: global model vs top-down,origins from 2023-01,0.983,0.973,1.0,A better
+District: global model vs top-down,newest 3 target months not scored,0.987,0.977,1.001,no clear difference
+District: global model vs separate ETS,block of 6,0.937,0.924,0.954,A better
+District: global model vs separate ETS,block of 12,0.937,0.924,0.958,A better
+District: global model vs separate ETS,block of 18,0.937,0.924,0.96,A better
+District: global model vs separate ETS,origins to 2022-12,0.923,0.905,0.945,A better
+District: global model vs separate ETS,origins from 2023-01,0.952,0.945,0.975,A better
+District: global model vs separate ETS,newest 3 target months not scored,0.938,0.924,0.958,A better
+District: top-down vs separate ETS,block of 6,0.95,0.925,0.973,A better
+District: top-down vs separate ETS,block of 12,0.95,0.928,0.971,A better
+District: top-down vs separate ETS,block of 18,0.95,0.928,0.973,A better
+District: top-down vs separate ETS,origins to 2022-12,0.932,0.895,0.956,A better
+District: top-down vs separate ETS,origins from 2023-01,0.968,0.961,0.982,A better
+District: top-down vs separate ETS,newest 3 target months not scored,0.95,0.928,0.971,A better
+District: separate ETS vs same month last year,block of 6,0.814,0.79,0.828,A better
+District: separate ETS vs same month last year,block of 12,0.814,0.789,0.828,A better
+District: separate ETS vs same month last year,block of 18,0.814,0.787,0.828,A better
+District: separate ETS vs same month last year,origins to 2022-12,0.83,0.813,0.841,A better
+District: separate ETS vs same month last year,origins from 2023-01,0.798,0.762,0.814,A better
+District: separate ETS vs same month last year,newest 3 target months not scored,0.813,0.789,0.828,A better

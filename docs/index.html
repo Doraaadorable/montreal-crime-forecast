@@ -141,7 +141,7 @@ footer p { margin: 0 0 6px; }
       <div>
         <h2>Uncertainty ranges fail when they matter</h2>
         <p>An 80% interval should contain the outcome 80% of the time. It contained 50% in 2020 and 61% in 2021, then recovered once the shocks had passed.</p>
-        <p>Recalibrating on past errors did not help. The standard method overcorrects to 91%, and the adaptive one swings from 92% in 2022 to 73% in 2026. The model's own interval scored better in every year.</p>
+        <p>The recalibration methods tested did not help. The standard method overcorrects to 91%, and the adaptive one swings from 92% in 2022 to 73% in 2026. The model's own interval scored better in every year.</p>
       </div>
       <div>
         <div class="chart" id="cov-chart"></div>
@@ -153,7 +153,7 @@ footer p { margin: 0 0 6px; }
   <section>
     <div class="prose">
       <h2>For small districts, pooling beats separate models</h2>
-      <p>Across 29 police districts, a typical series has 14 incidents a month. Dividing the citywide forecast by each district's share of the last year beats a model per district by 5%. One model trained on all 145 district series ties with that split, and it still beats separate models when given only three recent-level inputs. The gain comes from pooling.</p>
+      <p>Across 29 police districts, a typical series has 14 incidents a month. Dividing the citywide forecast by each district's share of the last year beats a model per district by 5%. One model trained on all 145 district series shows no clear gain over that split. Pooling is what helps: with the model held fixed, training on all series at once cuts error by 7% against training each alone.</p>
     </div>
     <div class="tablewrap">
       <table id="district-table"></table>
@@ -177,7 +177,7 @@ footer p { margin: 0 0 6px; }
         <ul class="plain">
           <li>Models beat "same month last year": error ratio 0.81, 95% interval 0.71 to 0.86.</li>
           <li>The gain fades with lead time: 0.60 one month ahead, 0.92 six months ahead, and no clear gain at six months since 2023.</li>
-          <li>ETS and ARIMA are tied (1.00, interval 0.95 to 1.09). Which model matters less than how far ahead and how stable the series is.</li>
+          <li>No clear difference between ETS and ARIMA (1.00, interval 0.95 to 1.09). Which model matters less than how far ahead and how stable the series is.</li>
         </ul>
       </div>
     </div>

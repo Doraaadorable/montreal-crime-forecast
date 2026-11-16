@@ -25,7 +25,7 @@ only 40% of outcomes fell inside its 80% interval.
 
 **3. Uncertainty ranges fail when they matter.**
 80% intervals covered 50% of outcomes in 2020 and 61% in 2021, then 78% to 81% from 2023 on.
-Conformal recalibration did not fix this. The standard version overcorrects to 91% because its
+The conformal settings tested did not fix this. The standard version overcorrects to 91% because its
 history still holds the shock. The adaptive version averages 81% only by swinging from 92% in
 2022 to 73% in 2026, and the model's own interval scored better in every year.
 
@@ -33,9 +33,9 @@ history still holds the shock. The adaptive version averages 81% only by swingin
 
 **4. For small districts, pooling beats separate models.**
 A typical district series has 14 incidents a month. Splitting the citywide forecast by each
-district's share of the last year beats a model per district by 5%. The gain comes from
-pooling itself: a model trained on all 145 series with only three recent-level inputs still
-beats per-series ETS.
+district's share of the last year beats a model per district by 5%. Pooling is what
+helps: with the model and its inputs held fixed, training on all 145 series at once cuts error
+by 7% against training each series alone (ratio 0.93, 95% interval 0.91 to 0.95).
 
 ## Which differences are real
 
@@ -52,10 +52,13 @@ favours the first method. An interval that includes 1 means the two cannot be se
 | District: top-down split vs separate ETS | 0.95 | 0.93 to 0.97 |
 | District: one pooled model vs top-down split | 0.99 | 0.98 to 1.00 |
 
-Model choice matters less than expected: ETS and ARIMA are tied, and a pooled gradient-boosting
-model is tied with the top-down split. These readings hold for bootstrap blocks of 6, 12 and
-18 origins, for both halves of the test period, and with the newest three months removed. The
-one exception is the six-month gain, which loses significance with blocks of 6.
+No clear difference was detected between ETS and ARIMA, or between a pooled gradient-boosting
+model and the top-down split.
+
+All 15 comparisons in the [full table](docs/FINDINGS.md) were rerun with bootstrap blocks of 6
+and 18, on each half of the test period, and without scoring the newest three months. Twelve
+keep the same reading. Three change with the check: the six-month gain, the forecast average
+against ETS, and the pooled model against the top-down split.
 
 ## Method
 
@@ -84,6 +87,7 @@ python src/backtest.py        # about 2 minutes on 4 cores
 python src/calibrate.py
 python src/hierarchy.py       # about 6 minutes on 4 cores
 python src/count_models.py    # about 1 minute
+python src/pooling_test.py    # about 10 minutes
 python src/significance.py
 python src/figures.py
 python src/build_page.py      # rebuilds docs/index.html

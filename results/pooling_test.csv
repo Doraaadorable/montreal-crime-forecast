@@ -1,0 +1,3 @@
+inputs,pooled_mase,separate_mase,error_ratio_pooled_vs_separate,ci_low,ci_high,share_of_origins_pooled_wins,n_forecasts
+"Recent levels only (y0, mean3, mean12)",0.831,0.891,0.933,0.91,0.954,0.91,66990
+All inputs except series identity,0.806,0.87,0.927,0.904,0.952,0.9,66990
