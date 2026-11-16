@@ -95,7 +95,8 @@ python src/run_all.py         # every step in order, about 30 minutes on 4 cores
 pytest                        # method checks, no data needed
 ```
 
-`src/run_all.py` lists the steps; each script also runs on its own.
+`src/run_all.py` lists the steps; each script also runs on its own. Run from a fresh clone on the
+same data file, it reproduces every committed result, figure and the summary page exactly.
 
 The source is updated daily, so numbers shift slightly with the download date.
 
