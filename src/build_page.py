@@ -9,14 +9,13 @@ Usage:
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
-RAW = ROOT / "data" / "raw" / "actes_criminels.csv"
 
 DISTRICT_ROWS = {
     "Global Poisson boosting": "One model for all series (Poisson boosting)",
@@ -54,7 +53,9 @@ def main() -> None:
     ets = long[long["model"] == "AutoETS"]
     coverage = ets.groupby(ets["ds"].dt.year)["covered80"].mean()
     district = pd.read_csv(RESULTS / "bottom_point_accuracy.csv", index_col=0)
-    downloaded = datetime.fromtimestamp(RAW.stat().st_mtime, tz=timezone.utc)
+    # The recorded download time, not the file's timestamp, which changes when copied.
+    manifest = json.loads((ROOT / "data" / "manifest.json").read_text(encoding="utf-8"))
+    downloaded = datetime.strptime(manifest["downloaded_utc"], "%Y-%m-%dT%H:%M:%SZ")
     data = {
         "series": series_payload(long),
         "coverage": {"year": [int(y) for y in coverage.index],

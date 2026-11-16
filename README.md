@@ -68,7 +68,8 @@ favours the first method.
 The choice between ETS and ARIMA, or between a pooled model and the top-down split, makes no
 clear difference. How far ahead the forecast is, and whether the series is stable, matter more.
 
-Each comparison was rerun with other block lengths and on each half of the test period. Three
+All but the pooled-versus-separate test were rerun with other block lengths and on each half of
+the test period. Three
 readings are sensitive to those choices: the six-month gain, the forecast average against ETS,
 and the pooled model against the top-down split.
 
