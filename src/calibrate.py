@@ -33,7 +33,13 @@ def conformal_quantile(scores: np.ndarray, level: int) -> float:
 
 
 def level_quantile(scores: np.ndarray, miscoverage: float) -> float:
-    """Quantile for a target miscoverage rate that ACI may push outside (0, 1)."""
+    """Quantile for a target miscoverage rate that ACI may push outside (0, 1).
+
+    Gibbs and Candes return an infinite interval when the rate falls to 0 or below.
+    An infinite interval cannot be scored or used, so this returns the largest error in
+    the calibration window instead; a rate of 1 or more gives a zero-width interval.
+    How often either happens is reported in results/aci_bounds.csv.
+    """
     if miscoverage <= 0:
         return float(scores.max())
     if miscoverage >= 1:
@@ -49,6 +55,7 @@ def calibrate_group(grp: pd.DataFrame) -> pd.DataFrame:
     ds = grp["ds"].to_numpy()
     cutoff = grp["cutoff"].to_numpy()
     out = {f"q{lv}_{name}": np.full(len(grp), np.nan) for lv in LEVELS for name in METHODS}
+    out.update({f"aci_rate{lv}": np.full(len(grp), np.nan) for lv in LEVELS})
     for i in range(len(grp)):
         resolved = ds[:i] <= cutoff[i]
         available = score[:i][resolved]
@@ -62,6 +69,7 @@ def calibrate_group(grp: pd.DataFrame) -> pd.DataFrame:
             past_score = available[~np.isnan(past_q)]
             misses = past_score > past_q[~np.isnan(past_q)]
             alpha_t = alpha + ACI_GAMMA * np.sum(alpha - misses)
+            out[f"aci_rate{lv}"][i] = alpha_t
             out[f"q{lv}_aci"][i] = level_quantile(available[-WINDOWS["rolling36"]:], alpha_t)
         for name, window in WINDOWS.items():
             cal = available if window is None else available[-window:]
@@ -117,6 +125,31 @@ def main() -> None:
     print("\nBy model:\n", by_model)
     best = by_cat.xs("AutoETS", level="model")
     print("\nAutoETS by category:\n", best)
+
+    bounds = pd.DataFrame({
+        f"{lv}%": {"rate at or below 0 (capped at largest past error)":
+                   (cal[f"aci_rate{lv}"] <= 0).mean(),
+                   "rate at or above 1 (zero width)": (cal[f"aci_rate{lv}"] >= 1).mean()}
+        for lv in LEVELS}).round(4)
+    bounds.to_csv(RESULTS / "aci_bounds.csv")
+    print("\nShare of adaptive intervals at a bound:\n", bounds)
+
+    # Coverage, width and score together, by year, for the model interval and ACI.
+    ets = cal[cal["model"] == "AutoETS"].assign(year=lambda d: d["ds"].dt.year)
+    ets["width_raw"] = (ets["hi80"] - ets["lo80"]) / ets["scale"]
+    ets["width_aci"] = (ets["hi80_aci"] - ets["lo80_aci"]) / ets["scale"]
+    by_year_cal = ets.groupby("year").agg(
+        model_coverage=("covered80", "mean"), aci_coverage=("covered80_aci", "mean"),
+        model_width=("width_raw", "mean"), aci_width=("width_aci", "mean"),
+        model_score=("interval_score80", "mean"), aci_score=("interval_score80_aci", "mean"),
+        n=("y", "size")).round(3)
+    by_year_cal.to_csv(RESULTS / "calibration_by_year.csv")
+    print("\nETS 80% interval, model vs adaptive conformal, by target year:\n", by_year_cal)
+    by_h = ets.groupby("horizon").agg(
+        model_coverage=("covered80", "mean"), aci_coverage=("covered80_aci", "mean"),
+        model_score=("interval_score80", "mean"), aci_score=("interval_score80_aci", "mean")).round(3)
+    by_h.to_csv(RESULTS / "calibration_by_horizon.csv")
+    print("\nBy horizon:\n", by_h)
 
     # Where raw model intervals fail: coverage of all backtest forecasts by target year.
     by_year = (

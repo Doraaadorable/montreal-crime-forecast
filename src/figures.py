@@ -152,7 +152,7 @@ def fig_calibration(cal: pd.DataFrame) -> None:
     ax.set_xlim(0.7, 1.0)
     ax.xaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
     ax.set_xlabel("Share of outcomes inside the 80% interval (origins 2021-12 to 2026-04)")
-    ax.set_title("Standard conformal over-covers after a shock; the adaptive version stays near 80%")
+    ax.set_title("Average coverage by calibration method (yearly swings are in the table)")
     ax.grid(axis="y", visible=False)
     ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5))
     save(fig, "fig5_calibration.png")

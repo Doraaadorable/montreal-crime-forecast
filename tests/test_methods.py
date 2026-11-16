@@ -4,7 +4,7 @@ import pandas as pd
 
 from calibrate import MIN_CALIBRATION, calibrate_group, conformal_quantile
 from count_models import nb_dispersion
-from hierarchy import build_hierarchy, projection
+from hierarchy import build_hierarchy, projection, reconcile
 from significance import block_bootstrap_ratio
 
 
@@ -34,6 +34,25 @@ def test_reconciled_forecasts_are_coherent():
         coherent = P @ base
         assert np.allclose(coherent, Sm @ coherent[-S.shape[1]:])  # equals sum of its bottom
         assert np.allclose(P @ coherent, coherent)  # already-coherent forecasts are unchanged
+
+
+def test_non_negative_forecasts_still_add_up():
+    all_series, S, _ = build_hierarchy(toy_bottom())
+    h = 2
+    cutoff = all_series.index[-h - 1]
+    future = all_series.index[-h:]
+    rng = np.random.default_rng(5)
+    rows = [{"unique_id": uid, "ds": ds, "cutoff": cutoff, "y": all_series.loc[ds, uid],
+             "AutoETS": rng.normal(2, 6), "SeasonalNaive": 5.0}  # base forecasts go negative
+            for uid in S.index for ds in future]
+    rec = reconcile(pd.DataFrame(rows), all_series, S)
+    n_bottom = S.shape[1]
+    for method, grp in rec.groupby("method"):
+        if method == "ETS base (not coherent)":
+            continue
+        assert (grp["forecast"] >= 0).all(), method
+        wide = grp.pivot(index="unique_id", columns="ds", values="forecast").loc[S.index]
+        assert np.allclose(wide.to_numpy(), S.to_numpy() @ wide.to_numpy()[-n_bottom:]), method
 
 
 def test_conformal_quantile_uses_finite_sample_rank():

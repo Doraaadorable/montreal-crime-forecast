@@ -9,11 +9,13 @@ Usage:
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import sys
 import time
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 API = "https://donnees.montreal.ca/api/3/action/datastore_search"
@@ -21,6 +23,7 @@ RESOURCE_ID = "c6f482bf-bf0f-4960-8b2f-9982c211addd"
 FIELDS = ["_id", "CATEGORIE", "DATE", "QUART", "PDQ", "LONGITUDE", "LATITUDE"]
 PAGE_SIZE = 32000
 OUT_PATH = Path(__file__).resolve().parents[1] / "data" / "raw" / "actes_criminels.csv"
+MANIFEST_PATH = OUT_PATH.parents[1] / "manifest.json"
 
 
 def fetch_page(offset: int, retries: int = 4) -> dict:
@@ -49,6 +52,25 @@ def fetch_page(offset: int, retries: int = 4) -> dict:
     raise AssertionError("unreachable")
 
 
+def write_manifest() -> None:
+    """Record which version of the data the results were computed from."""
+    digest = hashlib.sha256(OUT_PATH.read_bytes()).hexdigest()
+    with OUT_PATH.open(encoding="utf-8") as fh:
+        dates = [row["DATE"] for row in csv.DictReader(fh)]
+    downloaded = datetime.fromtimestamp(OUT_PATH.stat().st_mtime, tz=timezone.utc)
+    manifest = {
+        "source": "https://donnees.montreal.ca/dataset/actes-criminels",
+        "resource_id": RESOURCE_ID,
+        "downloaded_utc": downloaded.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "rows": len(dates),
+        "first_incident_date": min(dates),
+        "last_incident_date": max(dates),
+        "sha256": digest,
+    }
+    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    print(f"Wrote {MANIFEST_PATH}")
+
+
 def main() -> None:
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     offset, total, written = 0, None, 0
@@ -68,6 +90,7 @@ def main() -> None:
     if written != total:
         raise RuntimeError(f"Expected {total} rows, wrote {written}")
     print(f"Saved {written:,} rows to {OUT_PATH}")
+    write_manifest()
 
 
 if __name__ == "__main__":

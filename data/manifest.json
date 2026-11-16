@@ -1,0 +1,9 @@
+{
+  "source": "https://donnees.montreal.ca/dataset/actes-criminels",
+  "resource_id": "c6f482bf-bf0f-4960-8b2f-9982c211addd",
+  "downloaded_utc": "2026-11-15T23:46:51Z",
+  "rows": 365404,
+  "first_incident_date": "2015-01-01",
+  "last_incident_date": "2026-11-13",
+  "sha256": "8c76607f2e2ced1a4d1cfcc634774eb1b4df3c3ebb6199c590018b109a6a5e7a"
+}

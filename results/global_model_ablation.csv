@@ -1,0 +1,6 @@
+,All,h1,h3,h6
+Full model,0.799,0.708,0.808,0.846
+"Without series identity (category, district)",0.806,0.714,0.815,0.854
+Without category momentum,0.802,0.709,0.807,0.854
+Without seasonal lag,0.799,0.709,0.806,0.847
+"Recent levels only (y0, mean3, mean12)",0.831,0.739,0.833,0.883

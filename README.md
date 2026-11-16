@@ -1,7 +1,7 @@
 # When can monthly crime forecasts be trusted?
 
 Between 2020 and 2023, vehicle thefts in Montréal more than doubled, then fell 43% in two
-years. No forecasting model caught either turn. This project replays six years of forecasts on
+years. None of the seven methods tested caught either turn. This project replays six years of forecasts on
 365,000 police-recorded incidents to find where forecasts hold up and where they break.
 
 **Dora Zhuang** ·
@@ -11,12 +11,13 @@ years. No forecasting model caught either turn. This project replays six years o
 ## Findings
 
 Every model is refit at 77 points in time and forecasts 1 to 6 months ahead, using only the
-data available at that point.
+months before that point.
 
 **1. Models beat "same month last year" by 19%, mostly in the short run.**
-One month ahead, ETS cuts the benchmark's error by 40%. Six months ahead the gain is 8%.
+One month ahead, ETS cuts the benchmark's error by 40%. Six months ahead the gain is 8%, and
+since 2023 it cannot be told from zero.
 
-**2. A structural break defeats every method.**
+**2. A structural break defeats every method tested.**
 On 2021 forecast months, ETS errors on vehicle theft were 2.6 times the benchmark scale, and
 only 40% of outcomes fell inside its 80% interval.
 
@@ -24,14 +25,17 @@ only 40% of outcomes fell inside its 80% interval.
 
 **3. Uncertainty ranges fail when they matter.**
 80% intervals covered 50% of outcomes in 2020 and 61% in 2021, then 78% to 81% from 2023 on.
-Standard conformal recalibration overcorrects to 91% because its history still holds the
-shock. An adaptive version stays at 81%.
+Conformal recalibration did not fix this. The standard version overcorrects to 91% because its
+history still holds the shock. The adaptive version averages 81% only by swinging from 92% in
+2022 to 73% in 2026, and the model's own interval scored better in every year.
 
 ![Coverage by year](figures/fig3_coverage_by_year.png)
 
 **4. For small districts, pooling beats separate models.**
 A typical district series has 14 incidents a month. Splitting the citywide forecast by each
-district's share of the last year beats a model per district by 5%.
+district's share of the last year beats a model per district by 5%. The gain comes from
+pooling itself: a model trained on all 145 series with only three recent-level inputs still
+beats per-series ETS.
 
 ## Which differences are real
 
@@ -49,12 +53,15 @@ favours the first method. An interval that includes 1 means the two cannot be se
 | District: one pooled model vs top-down split | 0.99 | 0.98 to 1.00 |
 
 Model choice matters less than expected: ETS and ARIMA are tied, and a pooled gradient-boosting
-model is tied with the top-down split.
+model is tied with the top-down split. These readings hold for bootstrap blocks of 6, 12 and
+18 origins, for both halves of the test period, and with the newest three months removed. The
+one exception is the six-month gain, which loses significance with blocks of 6.
 
 ## Method
 
 - **Data.** 365,404 incidents recorded by the Service de police de la Ville de Montréal (SPVM),
-  January 2015 to October 2026, in five categories and 29 police districts.
+  January 2015 to October 2026, in five categories and 29 police districts. Downloaded 15
+  November 2026; the file hash is in `data/manifest.json`.
 - **Backtest.** 77 rolling origins, horizons of 1 to 6 months, 80% and 95% intervals.
 - **Models.** ETS, ARIMA, Theta, their average, a pooled LightGBM model with a Poisson loss,
   and two naive benchmarks. Hyperparameters were fixed in advance.
@@ -65,7 +72,8 @@ model is tied with the top-down split.
 - **Significance.** Moving-block bootstrap on error ratios, in blocks of 12 origins.
 
 The counts are incidents recorded by police, so they reflect reporting and recording practice
-as well as crime itself.
+as well as crime itself. Past months come from today's version of the data, which may differ
+from what was published at the time.
 
 ## Reproduce
 

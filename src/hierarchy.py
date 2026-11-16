@@ -11,6 +11,7 @@ Usage:
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -72,7 +73,7 @@ def reconcile(cv: pd.DataFrame, all_series: pd.DataFrame, S: pd.DataFrame) -> pd
     bottom_up = Sm @ np.hstack([np.zeros((n_bottom, len(ids) - n_bottom)), np.eye(n_bottom)])
     ols = projection(Sm, np.ones(len(ids)))
     wls = projection(Sm, Sm.sum(axis=1))  # weight = number of bottom series aggregated
-    frames = []
+    frames, negatives = [], {}
     for cutoff, grp in cv.groupby("cutoff"):
         base = grp.pivot(index="unique_id", columns="ds", values="AutoETS").loc[ids].to_numpy()
         # Top-down: split the total forecast by each bottom series' share of the last year.
@@ -90,13 +91,30 @@ def reconcile(cv: pd.DataFrame, all_series: pd.DataFrame, S: pd.DataFrame) -> pd
         }
         actual = grp.pivot(index="unique_id", columns="ds", values="y").loc[ids]
         for name, values in methods.items():
-            f = pd.DataFrame(np.clip(values, 0, None), index=ids, columns=actual.columns)
+            negatives[name] = negatives.get(name, 0) + int((values < 0).sum())
+            if name == "ETS base (not coherent)":
+                values = np.clip(values, 0, None)
+            else:
+                # Counts cannot be negative. Clipping every level separately would break
+                # the adding-up property, so clip the bottom level and re-aggregate.
+                values = Sm @ np.clip(values[-n_bottom:], 0, None)
+            f = pd.DataFrame(values, index=ids, columns=actual.columns)
             out = f.stack().rename("forecast").reset_index()
             out.columns = ["unique_id", "ds", "forecast"]
             out["y"] = actual.stack().to_numpy()
             out["cutoff"], out["method"] = cutoff, name
             frames.append(out)
+    print("Negative forecasts before the non-negativity step:", negatives)
     return pd.concat(frames, ignore_index=True)
+
+
+def coherence_gap(rec: pd.DataFrame) -> pd.DataFrame:
+    """Relative gap between the total forecast and the sum of bottom forecasts."""
+    total = rec[rec["unique_id"] == "Total"].set_index(["method", "cutoff", "ds"])["forecast"]
+    summed = (rec[rec["level"] == "Category x district"]
+              .groupby(["method", "cutoff", "ds"])["forecast"].sum())
+    gap = (summed - total).abs() / total
+    return gap.groupby("method").agg(mean_gap="mean", max_gap="max")
 
 
 def add_scale(rec: pd.DataFrame, all_series: pd.DataFrame) -> pd.DataFrame:
@@ -125,8 +143,12 @@ def main() -> None:
     print("Median monthly count by level:\n",
           all_series.median().groupby(level).median().reindex(LEVELS).round(1))
 
-    cv = base_forecasts(all_series)
-    cv.to_parquet(RESULTS / "hierarchy_base_forecasts.parquet", index=False)
+    cache = RESULTS / "hierarchy_base_forecasts.parquet"
+    if "--reuse-base" in sys.argv and cache.exists():
+        cv = pd.read_parquet(cache)  # skip the 6-minute refit, redo reconciliation only
+    else:
+        cv = base_forecasts(all_series)
+        cv.to_parquet(cache, index=False)
     rec = add_scale(reconcile(cv, all_series, S), all_series)
     rec["level"] = rec["unique_id"].map(level)
     rec["horizon"] = ((rec["ds"].dt.year - rec["cutoff"].dt.year) * 12
@@ -144,16 +166,10 @@ def main() -> None:
     print("\nMASE by level and method:\n", by_level)
     print("\nBottom-level MASE by horizon:\n", by_horizon)
 
-    # Coherence check: how far do the independent base forecasts miss adding up?
-    base = rec[rec["method"] == "ETS base (not coherent)"]
-    total = base[base["unique_id"] == "Total"].set_index(["cutoff", "ds"])["forecast"]
-    summed = base[base["level"] == "Category x district"].groupby(["cutoff", "ds"])["forecast"].sum()
-    gap = ((summed - total).abs() / total)
-    print(f"\nBase forecasts: sum of bottom vs total differs by {gap.mean():.1%} on average "
-          f"(max {gap.max():.1%})")
-    pd.Series({"mean_gap": gap.mean(), "max_gap": gap.max()}).to_csv(
-        RESULTS / "hierarchy_coherence_gap.csv", header=["value"])
-
+    gaps = coherence_gap(rec)
+    gaps.to_csv(RESULTS / "hierarchy_coherence_gap.csv")
+    print("\nGap between total forecast and sum of bottom forecasts:\n",
+          gaps.apply(lambda c: c.map("{:.4%}".format)))
 
 if __name__ == "__main__":
     np.seterr(all="ignore")

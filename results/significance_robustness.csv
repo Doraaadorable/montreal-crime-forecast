@@ -1,0 +1,24 @@
+comparison,check,error_ratio,ci_low,ci_high
+Citywide: ETS vs same month last year,block of 6,0.81,0.712,0.887
+Citywide: ETS vs same month last year,block of 12,0.81,0.707,0.863
+Citywide: ETS vs same month last year,block of 18,0.81,0.709,0.862
+Citywide: ETS vs same month last year,origins to 2022-12,0.796,0.636,0.898
+Citywide: ETS vs same month last year,origins from 2023-01,0.828,0.753,0.869
+  6 months ahead,block of 6,0.917,0.774,1.045
+  6 months ahead,block of 12,0.917,0.81,0.989
+  6 months ahead,block of 18,0.917,0.811,0.994
+  6 months ahead,origins to 2022-12,0.875,0.733,0.965
+  6 months ahead,origins from 2023-01,0.974,0.883,1.046
+District: top-down vs separate ETS,block of 6,0.95,0.925,0.973
+District: top-down vs separate ETS,block of 12,0.95,0.928,0.971
+District: top-down vs separate ETS,block of 18,0.95,0.928,0.973
+District: top-down vs separate ETS,origins to 2022-12,0.932,0.895,0.956
+District: top-down vs separate ETS,origins from 2023-01,0.968,0.961,0.982
+District: global model vs top-down,block of 6,0.987,0.974,1.004
+District: global model vs top-down,block of 12,0.987,0.977,1.001
+District: global model vs top-down,block of 18,0.987,0.978,1.001
+District: global model vs top-down,origins to 2022-12,0.99,0.986,1.012
+District: global model vs top-down,origins from 2023-01,0.983,0.973,1.0
+Citywide: ETS vs same month last year,without newest 1 month(s),0.81,0.706,0.863
+Citywide: ETS vs same month last year,without newest 2 month(s),0.809,0.706,0.863
+Citywide: ETS vs same month last year,without newest 3 month(s),0.808,0.706,0.863

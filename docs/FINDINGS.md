@@ -3,7 +3,7 @@
 **When can monthly crime forecasts be trusted?** Dora Zhuang
 
 Recorded property and violent incidents in Montréal, 2015 to 2026. Every model is refit at 77
-points in time and forecasts 1 to 6 months ahead, using only the data available at that point.
+points in time and forecasts 1 to 6 months ahead, using only the months before that point.
 
 ## Findings
 
@@ -14,9 +14,9 @@ against 1.25). Six months ahead it has nearly closed (1.13 against 1.23).
 
 ![MASE by horizon](../figures/fig2_mase_by_horizon.png)
 
-**2. A structural break defeats every method.**
+**2. A structural break defeats every method tested.**
 Vehicle thefts rose from about 4,400 a year (2015 to 2020) to 11,500 in 2023, then fell back.
-No model anticipated either turn. ETS had a MASE of 2.63 on 2021 forecast months, and only 40%
+None of the methods tested anticipated either turn. ETS had a MASE of 2.63 on 2021 forecast months, and only 40%
 of outcomes fell inside its 80% interval.
 
 ![Vehicle theft forecasts](../figures/fig4_vehicle_theft.png)
@@ -28,10 +28,21 @@ hide this.
 
 ![Coverage by year](../figures/fig3_coverage_by_year.png)
 
-**4. Standard conformal calibration overcorrects after a shock.**
-Recalibrating intervals with past forecast errors pushed 80% coverage up to 91%, because the
-calibration history still contained the 2020 and 2021 errors. Adaptive conformal inference stayed
-near the target (81%), at the cost of wider intervals than the model's own in calm periods.
+**4. Conformal recalibration did not improve on the model's own intervals.**
+Recalibrating with past forecast errors pushed 80% coverage up to 91%, because the calibration
+history still contained the 2020 and 2021 errors. Adaptive conformal inference averaged 81%,
+but by overshooting and then undershooting, and the ETS interval scored better in every year.
+
+| Forecast year | ETS coverage | Adaptive coverage | ETS score | Adaptive score |
+|---|---|---|---|---|
+| 2022 | 76% | 92% | 4.15 | 4.76 |
+| 2023 | 78% | 89% | 4.15 | 4.88 |
+| 2024 | 81% | 80% | 3.62 | 4.14 |
+| 2025 | 78% | 74% | 3.52 | 4.00 |
+| 2026 | 80% | 73% | 3.48 | 3.90 |
+
+The adaptive method needs two years of forecasts before it starts, so this test begins after
+the 2020 shock, where the ETS intervals were at their worst.
 
 ![Calibration comparison](../figures/fig5_calibration.png)
 
@@ -48,35 +59,58 @@ total by each district's share of the last 12 months, is the most accurate at di
 | WLS reconciliation | 0.88 | **0.92** | 0.81 | 0.85 |
 | Independent ETS (does not add up) | 0.84 | 1.00 | 0.84 | 0.85 |
 | Bottom-up | 0.94 | 0.98 | 0.83 | 0.85 |
-| OLS reconciliation | 0.84 | 0.98 | 0.82 | 0.87 |
+| OLS reconciliation | 0.84 | 0.97 | 0.82 | 0.87 |
 | Same month last year | 1.19 | 1.26 | 1.03 | 1.05 |
 
 MASE pooled within each level. No method wins at every level: bottom-up is worst for the city
-total, and WLS is best for categories.
+total, and WLS is best for categories. OLS and WLS produce some negative forecasts (1,055 and
+663 of 83,160). These are set to zero at the bottom level and the upper levels re-summed, so
+every reconciled forecast is non-negative and adds up exactly.
 
 **6. For small counts, the distribution matters more than the model.**
 At the finest level (one category in one district), a single gradient-boosting model with a
 Poisson loss, trained on all 145 series at once, has the lowest error, but its lead over the
 top-down split (1% overall, winning at 68% of origins) is too small to tell from chance. Its edge is at
-1 to 2 months ahead; from 3 months on the two are level. For the 20 sparsest series (under 5
-incidents a month), per-series ETS is still best.
+1 to 2 months ahead; from 3 months on the two are level.
 
-| Method (category x district) | All | 1 month | 6 months | Under 5 a month |
-|---|---|---|---|---|
-| Global Poisson boosting | **0.80** | **0.71** | **0.85** | 0.79 |
-| Top-down (last-year shares) | 0.81 | 0.76 | 0.85 | 0.78 |
-| Independent ETS | 0.85 | 0.76 | 0.91 | **0.77** |
-| Same month last year | 1.05 | 1.05 | 1.05 | 0.99 |
+| Method (category x district) | All | 1 month | 6 months |
+|---|---|---|---|
+| Global Poisson boosting | **0.80** | **0.71** | **0.85** |
+| Top-down (last-year shares) | 0.81 | 0.76 | 0.85 |
+| Independent ETS | 0.85 | 0.76 | 0.91 |
+| Same month last year | 1.05 | 1.05 | 1.05 |
+
+The global model's gain comes from pooling, not from its features. Removing any one feature
+group barely moves the error, and a version with only three recent-level inputs still beats
+per-series ETS (0.83 against 0.85).
+
+| Global model variant | All | 1 month | 6 months |
+|---|---|---|---|
+| Full model | 0.799 | 0.708 | 0.846 |
+| Without seasonal lag | 0.799 | 0.709 | 0.847 |
+| Without category momentum | 0.802 | 0.709 | 0.854 |
+| Without series identity (category, district) | 0.806 | 0.714 | 0.854 |
+| Recent levels only (last month, 3- and 12-month means) | 0.831 | 0.739 | 0.883 |
 
 The choice of predictive distribution has a larger effect than the choice of model. A Poisson
 interval assumes variance equals the mean and covers only 66% of outcomes at a nominal 80%.
-Allowing extra variance with a negative binomial gives the best interval score, though it
-over-covers at 87%.
+The shortfall grows with volume: Poisson is adequate for series under 5 incidents a month and
+fails for busy ones. A negative binomial fixes this but over-covers; estimating its dispersion
+per category brings coverage closer to target and gives the best score.
+
+| 80% coverage, same point forecast | Under 5 a month | 5 to 20 | Over 20 |
+|---|---|---|---|
+| Poisson | 82% | 66% | 60% |
+| Negative binomial, one dispersion | 89% | 86% | 88% |
+| Negative binomial, dispersion by category | 87% | 84% | 87% |
+
+Volume bands are set from the first five years, before any forecast is scored.
 
 | 80% interval (category x district) | Coverage | Mean width | Interval score |
 |---|---|---|---|
-| Global boosting + negative binomial | 87.2% | 18.7 | **3.73** |
-| Top-down + negative binomial | 86.4% | 18.7 | **3.73** |
+| Global boosting + negative binomial by category | 85.7% | 18.3 | **3.71** |
+| Global boosting + negative binomial | 87.2% | 18.7 | 3.73 |
+| Top-down + negative binomial | 86.4% | 18.7 | 3.73 |
 | ETS normal interval | 77.4% | 17.2 | 3.96 |
 | Global boosting + Poisson | 66.4% | 9.8 | 4.29 |
 | Top-down + Poisson | 65.1% | 9.8 | 4.33 |
@@ -101,6 +135,12 @@ methods cannot be separated.
 | District: global model vs top-down | 0.99 | 0.98 to 1.00 | not distinguishable |
 | District: global model vs separate ETS | 0.94 | 0.92 to 0.96 | global better |
 | District: top-down vs separate ETS | 0.95 | 0.93 to 0.97 | top-down better |
+
+These readings hold for blocks of 6, 12 and 18 origins, for origins before and after January
+2023, and with the newest one to three months removed
+([table](../results/significance_robustness.csv)). The exception is the six-month gain: with
+blocks of 6 its interval is 0.77 to 1.05, and for origins from 2023 the ratio is 0.97 (0.88 to
+1.05). Not being able to separate two methods does not show they are equivalent.
 
 The ensemble is the plain average of the ETS, ARIMA and Theta forecasts. It has the lowest
 citywide MASE (0.98 against 1.01 for ETS) and beats ETS at 71% of origins, but the interval
@@ -157,19 +197,22 @@ Lower is better.
 
 - The counts are incidents **recorded** by police. They reflect reporting and recording
   practice as well as crime itself.
-- Incident types can be revised after the initial report, so the most recent months may change.
+- Past months come from the version of the data downloaded on 15 November 2026
+  (`data/manifest.json`), not from what was published at each forecast origin. Incident types
+  can be revised after the initial report. Removing the newest three months leaves the
+  headline ratio unchanged (0.81).
 - Five districts merged into neighbours during the period (24 into 26, 11 into 9, 33 into 31,
   22 into 21, 55 into 5). Their history is mapped to today's boundaries.
-- District intervals use one dispersion value for all series, which contributes to the
-  negative binomial over-covering.
-- Adaptive conformal results start in December 2021, after the 2020 shock.
+- When the adaptive conformal rate falls to zero, the interval is capped at the largest past
+  error instead of made infinite. This happened for 6% of 95% intervals and no 80% intervals.
 - "Offences causing death" (two or three a month) is excluded as too sparse.
 
 ## Next steps
 
 - Coherent prediction intervals across the whole district hierarchy.
-- Series-specific dispersion, and methods that adapt faster to level shifts.
-- An explicit treatment of late revisions in recent months.
+- Methods that adapt faster to level shifts.
+- Monthly data snapshots, to measure how much recent months are revised.
+- A planning use case with unequal costs for under- and over-forecasting.
 
 ## Data source
 

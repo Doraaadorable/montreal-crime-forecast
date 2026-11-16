@@ -94,10 +94,43 @@ def main() -> None:
     compare(rows, "District: separate ETS vs same month last year",
             bottom["ETS base (not coherent)"], bottom["Same month last year"])
 
+    # Robustness of the headline comparisons to three analysis choices.
+    ets, naive = by_model["AutoETS"], by_model["SeasonalNaive"]
+    last = long["ds"].max()
+    headline = {
+        "Citywide: ETS vs same month last year": (per_origin(ets, loss), per_origin(naive, loss)),
+        "  6 months ahead": (per_origin(ets[ets["horizon"] == 6], loss),
+                             per_origin(naive[naive["horizon"] == 6], loss)),
+        "District: top-down vs separate ETS": (bottom["Top-down"], bottom["ETS base (not coherent)"]),
+        "District: global model vs top-down": (bottom["Global"], bottom["Top-down"]),
+    }
+    robust = []
+    for label, (a, b) in headline.items():
+        for block in (6, 12, 18):  # bootstrap block length
+            r, lo, hi = block_bootstrap_ratio(a.to_numpy(), b.to_numpy(), block=block)
+            robust.append({"comparison": label, "check": f"block of {block}", "error_ratio": round(r, 3),
+                           "ci_low": round(lo, 3), "ci_high": round(hi, 3)})
+        for name, mask in (("origins to 2022-12", a.index <= "2022-12-31"),
+                           ("origins from 2023-01", a.index > "2022-12-31")):
+            r, lo, hi = block_bootstrap_ratio(a[mask].to_numpy(), b[mask].to_numpy())
+            robust.append({"comparison": label, "check": name, "error_ratio": round(r, 3),
+                           "ci_low": round(lo, 3), "ci_high": round(hi, 3)})
+    # Recent months can still be revised: drop the newest 1 to 3 target months.
+    for k in (1, 2, 3):
+        keep = lambda d: d[d["ds"] <= last - pd.DateOffset(months=k)]
+        r, lo, hi = block_bootstrap_ratio(per_origin(keep(ets), loss).to_numpy(),
+                                          per_origin(keep(naive), loss).to_numpy())
+        robust.append({"comparison": "Citywide: ETS vs same month last year",
+                       "check": f"without newest {k} month(s)", "error_ratio": round(r, 3),
+                       "ci_low": round(lo, 3), "ci_high": round(hi, 3)})
+    robust = pd.DataFrame(robust)
+    robust.to_csv(RESULTS / "significance_robustness.csv", index=False)
+
     table = pd.DataFrame(rows).set_index("comparison")
     table.to_csv(RESULTS / "significance.csv")
     pd.set_option("display.width", 200)
     print(table)
+    print("\nRobustness:\n", robust.to_string(index=False))
     ens = long.groupby("model")["abs_scaled_error"].mean().round(3).sort_values()
     print("\nCitywide MASE including the ensemble:\n", ens)
     print("\nEnsemble MASE by category:\n",
