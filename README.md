@@ -39,6 +39,25 @@ near the target (81%), at the cost of wider intervals than the model's own in ca
 
 ![Calibration comparison](figures/fig5_calibration.png)
 
+**5. At district level, splitting the city forecast beats forecasting each district.**
+Extending the study to 29 police districts gives 180 series in four levels. The smallest series
+(one category in one district) have a median of 14 incidents a month. Forecast independently,
+the series do not add up: the sum of the district forecasts differs from the city forecast by
+6% on average. Among five ways of making them consistent, the simplest one, splitting the city
+total by each district's share of the last 12 months, is the most accurate at district level.
+
+| Method | Total | Category | District | Category x district |
+|---|---|---|---|---|
+| Top-down (last-year shares) | 0.84 | 0.97 | **0.80** | **0.81** |
+| WLS reconciliation | 0.88 | **0.92** | 0.81 | 0.85 |
+| Independent ETS (does not add up) | 0.84 | 1.00 | 0.84 | 0.85 |
+| Bottom-up | 0.94 | 0.98 | 0.83 | 0.85 |
+| OLS reconciliation | 0.84 | 0.98 | 0.82 | 0.87 |
+| Same month last year | 1.19 | 1.26 | 1.03 | 1.05 |
+
+MASE pooled within each level, same 77 origins and horizons as above. No single method wins at
+every level: bottom-up is clearly worst for the city total, and WLS is best for categories.
+
 ## Results in numbers
 
 Rolling-origin backtest, origins December 2019 to April 2026, horizons 1 to 6 months.
@@ -74,6 +93,9 @@ misses; lower is better.
 - **Models.** ETS, ARIMA and Theta with automatic order selection, against two naive benchmarks.
 - **Metrics.** MASE for point accuracy; empirical coverage and the interval (Winkler) score for
   uncertainty.
+- **Hierarchy.** 5 categories by 29 districts (145 bottom series), plus district, category and
+  city totals. Reconciliation is implemented from the projection formula in `src/hierarchy.py`:
+  bottom-up, top-down, and OLS and structurally weighted (WLS) projections.
 - **Calibration.** Split conformal on relative errors with an expanding and a 36-forecast
   window, and adaptive conformal inference (Gibbs and Candès, 2021) with a step size fixed in
   advance at 0.05. Every calibration set uses only outcomes observed before the forecast origin.
@@ -85,6 +107,10 @@ misses; lower is better.
 - The SPVM states this dataset is not its official statistics. Incident types can be revised
   after the initial report, so the most recent months may still change.
 - When one event involves several offences, only the most serious is published.
+- Five districts were merged into neighbours during the period. Their history is mapped to
+  today's boundaries. Two mergers are documented by the SPVM; the other three (11 into 9, 24
+  into 26, 33 into 31) are inferred from the data and should be confirmed.
+- District results are point forecasts only; intervals were not evaluated at that level.
 - "Offences causing death" (two or three a month) is excluded as too sparse for these models.
 - The adaptive conformal results start in December 2021, so that method was not tested through
   the 2020 shock itself.
@@ -97,6 +123,7 @@ pip install -r requirements.txt
 python src/download_data.py   # about 365,000 rows from the open data API
 python src/backtest.py        # about 2 minutes on 4 cores
 python src/calibrate.py
+python src/hierarchy.py       # about 6 minutes on 4 cores
 python src/figures.py
 ```
 
@@ -104,7 +131,7 @@ Results depend on the download date, because the source is updated daily.
 
 ## Next steps
 
-- Hierarchical forecasts by police district (PDQ) with reconciliation.
+- Prediction intervals for the district hierarchy.
 - Count models and methods that adapt faster to level shifts.
 - An explicit treatment of late revisions in recent months.
 
