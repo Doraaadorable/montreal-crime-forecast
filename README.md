@@ -21,9 +21,9 @@ since 2023 it cannot be told from zero.
 On 2021 forecast months, ETS errors on vehicle theft were 2.6 times the benchmark scale, and
 only 40% of outcomes fell inside its 80% interval. Fitting on only the last two or three years
 did not help (error ratio 0.98, interval 0.95 to 1.05) and raised errors on the other four
-categories by 25% to 45%. Detection was faster than forecasting: a standard monitor on the
-forecast errors raised a clear alarm in July 2021, at 652 thefts a month, 25 months before the
-peak of 1,205.
+categories by 25% to 45%. A standard monitor on the forecast errors
+first signalled in April 2021 and again in July, when thefts had reached 652 a month against
+392 in 2020. The peak of 1,205 came in August 2023.
 
 ![Vehicle theft forecasts](figures/fig4_vehicle_theft.png)
 
@@ -41,10 +41,12 @@ district's share of the last year beats a model per district by 5%. Pooling is w
 helps: with the model and its inputs held fixed, training on all 145 series at once cuts error
 by 7% against training each series alone (ratio 0.93, 95% interval 0.91 to 0.95).
 
-**5. A planner aiming to be short one month in ten would have been short one in six.**
-Planning capacity to the forecast's 90th percentile left a shortfall in 17.5% of months: 28%
-in 2021, 9% in 2024. That plan still costs 29% less than "last year plus 20%", but only 6%
-less than a flat 20% margin on the ETS forecast.
+**5. Plans built on the 90th percentile fall short more often than intended.**
+One month ahead, such a plan should be short in 10% of months. It was short in 14.5% on
+average: 21% for vehicle theft, 10% for robbery and mischief, and 25% of months in 2021. Under
+an illustrative cost of nine to one for shortfall against spare capacity, and across all
+horizons, it costs 29% less than "last year plus 20%" and 6% less than a flat 20% margin on
+the same forecast.
 
 ## Which differences are real
 
@@ -91,14 +93,22 @@ from what was published at the time.
 
 ```bash
 pip install -r requirements.txt
-python src/run_all.py         # every step in order, about 30 minutes on 4 cores
-pytest                        # method checks, no data needed
+python src/run_all.py                   # downloads today's data, then runs every step
+pytest                                  # method checks, no data needed
 ```
 
-`src/run_all.py` lists the steps; each script also runs on its own. Run from a fresh clone on the
-same data file, it reproduces every committed result, figure and the summary page exactly.
+The source is updated daily, so a new download gives slightly different numbers. To reproduce
+the committed results, use the data version in `data/manifest.json`: place that file at
+`data/raw/actes_criminels.csv`, then
 
-The source is updated daily, so numbers shift slightly with the download date.
+```bash
+python src/run_all.py --skip-download   # about 22 minutes on 4 cores
+python src/verify_outputs.py            # compares 40 outputs with results/output_hashes.sha256
+```
+
+With that data file and the environment in `results/environment.txt`, a run from a fresh clone
+reproduced every committed result, figure and the summary page byte for byte. Other package
+versions may change trailing digits or image encoding.
 
 ## Data and license
 

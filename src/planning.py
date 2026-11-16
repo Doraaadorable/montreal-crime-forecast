@@ -1,7 +1,7 @@
 """What the forecasts mean for someone who has to plan capacity.
 
-Suppose monthly workload scales with recorded incidents, and running short costs
-more than holding spare capacity. A planner who accepts being short one month in
+An illustration, not a costing of police work. Suppose monthly workload scales with
+recorded incidents, and running short costs more than holding spare capacity. A planner who accepts being short one month in
 ten should plan to the 90th percentile of the forecast, which is the upper end of
 the 80% interval. This script scores that plan against simpler rules:
 
@@ -70,6 +70,23 @@ def main() -> None:
         for cat in sorted(ets["unique_id"].unique())}).T.round(3)
     by_cat.to_csv(RESULTS / "planning_by_category.csv")
     print("\nETS 90th percentile plan by category:\n", by_cat.to_string())
+
+    # The tables above pool every category, origin and horizon, so one calendar month is
+    # counted many times. For a statement about months, take one-month-ahead forecasts
+    # only: each category then has exactly one plan per calendar month.
+    one = ets[ets["horizon"] == 1]
+    months = one.assign(short=one["y"] > one["hi80"]).pivot(index="ds", columns="unique_id",
+                                                           values="short")
+    by_month = months.mean().rename("share_of_months_short").to_frame()
+    by_month["months_short"] = months.sum()
+    by_month["months"] = months.count()
+    by_month.loc["Average of the five categories"] = [months.mean().mean(), np.nan, np.nan]
+    by_month.to_csv(RESULTS / "planning_one_month_ahead.csv")
+    print("\nOne month ahead, 90th percentile plan, share of calendar months short:\n",
+          by_month.round(3).to_string())
+    yearly = months.groupby(months.index.year).mean().mean(axis=1).round(3)
+    yearly.to_csv(RESULTS / "planning_one_month_ahead_by_year.csv", header=["share_short"])
+    print("\nSame, by year (average of the five categories):\n", yearly.to_string())
 
     by_year = ets.assign(short=ets["y"] > ets["hi80"]).groupby("year")["short"].mean().round(3)
     by_year.to_csv(RESULTS / "planning_shortfall_by_year.csv")

@@ -67,20 +67,34 @@ def main() -> None:
         lambda s: ", ".join(f"{y} ({n})" for y, n in s.value_counts().sort_index().items()))
     print("\n", summary.to_string())
 
+    # Vehicle theft in detail. Months are the months the incidents occurred in; a monitor
+    # would see each one only once that month's data was published.
     theft = one[one["unique_id"] == "Vehicle theft"].set_index("ds").sort_index()
     peak_month = theft["y"].idxmax()
-    first = alarms[(alarms["category"] == "Vehicle theft") & (alarms["direction"] == "above forecast")
-                   & (alarms["month"] >= "2021-01")].iloc[0]
-    first_month = pd.Timestamp(first["month"] + "-01")
-    lead = (peak_month.year - first_month.year) * 12 + peak_month.month - first_month.month
-    print(f"\nVehicle theft: first upward alarm of the surge in {first['month']} at {first['recorded']} "
-          f"thefts; peak {theft['y'].max()} in {peak_month:%Y-%m}, {lead} months later.")
-    print(f"Mean monthly thefts in 2020: {theft.loc['2020', 'y'].mean():.0f}")
-    down = alarms[(alarms["category"] == "Vehicle theft") & (alarms["direction"] == "below forecast")
-                  & (alarms["month"] > f"{peak_month:%Y-%m}")]
-    if len(down):
-        print("First downward alarm after the peak:", down.iloc[0]["month"])
+    print(f"\nVehicle theft: peak {theft['y'].max():.0f} in {peak_month:%Y-%m}; "
+          f"2020 monthly mean {theft.loc['2020', 'y'].mean():.0f}")
+    print(alarms[alarms["category"] == "Vehicle theft"].to_string(index=False))
 
+    # No downward alarm followed the peak. Is that because the model's stated
+    # uncertainty had grown? Re-run the chart after the peak with the error scaled as
+    # if uncertainty had stayed at its 2020 share of the forecast level.
+    after = theft.loc[peak_month + pd.DateOffset(months=1):]
+    sigma_all = (theft["hi80"] - theft["lo80"]) / (2 * Z80)
+    share_2020 = (sigma_all / theft["forecast"]).loc["2020"].mean()
+    share_after = (sigma_all / theft["forecast"]).loc[after.index].mean()
+    rescaled = (after["y"] - after["forecast"]) / (share_2020 * after["forecast"])
+    downward = lambda z: [m for m, d in zip(*[cusum_alarms(z).get(c, []) for c in ("month", "direction")])
+                          if d == "below forecast"]
+    negative_run = int((after["y"] < after["forecast"]).cummin().sum())
+    check = pd.Series({
+        "stated_sd_share_of_forecast_2020": round(share_2020, 3),
+        "stated_sd_share_of_forecast_after_peak": round(share_after, 3),
+        "downward_alarms_after_peak": len(downward(after["z"])),
+        "downward_alarms_after_peak_with_2020_sd_share": len(downward(rescaled)),
+        "consecutive_months_below_forecast_after_peak": negative_run,
+    })
+    check.to_csv(RESULTS / "monitoring_decline_check.csv", header=["value"])
+    print("\nDecline after the peak:\n", check.to_string())
 
 if __name__ == "__main__":
     main()

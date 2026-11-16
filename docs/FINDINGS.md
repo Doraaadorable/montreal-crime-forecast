@@ -183,11 +183,11 @@ just reaches 1. On vehicle theft, ETS is far better than the benchmark (ratio 0.
 a poor forecast in absolute terms (MASE 1.46).
 
 **8. What this means for planning.**
-Suppose workload scales with recorded incidents and running short costs nine times as much as
-holding spare capacity. The plan that fits those costs is the 90th percentile of the forecast,
-which should fall short in 10% of months.
+An illustration with assumed costs. Suppose workload scales with recorded incidents and
+running short costs nine times as much as holding spare capacity. The plan that fits those
+costs is the 90th percentile of the forecast, which should fall short 10% of the time.
 
-| Plan | Months short | Spare capacity | Cost |
+| Plan | Cases short | Spare capacity | Cost |
 |---|---|---|---|
 | ETS 90th percentile | 17.5% | 19% | **0.262** |
 | ETS forecast + 20% | 17.8% | 20% | 0.280 |
@@ -196,18 +196,33 @@ which should fall short in 10% of months.
 | Last year's count + 10% | 34.5% | 15% | 0.468 |
 | ETS forecast, no margin | 52.7% | 6% | 0.562 |
 
-Spare capacity is the amount planned above what happened, as a share of actual incidents. Cost
-weights shortfall 9 to 1 against spare capacity, on the MASE scale.
+A case is one category, forecast origin and horizon, so each calendar month is counted several
+times. Spare capacity is the amount planned above what happened, as a share of actual
+incidents. Cost weights shortfall 9 to 1 against spare capacity, on the MASE scale.
 
-The 90th-percentile plan fell short in 28% of months in 2021 and 9% in 2024, and 23% of the
-time for vehicle theft across the whole period. Forecast-based plans beat plans based on last
-year's count by 29%. The model's own interval beats a flat 20% margin on the same forecast by
-only 6%, so most of the value is in the point forecast.
+Forecast-based plans cost 29% less than plans based on last year's count. The model's own
+interval beats a flat 20% margin on the same forecast by 6%, so most of the value is in the
+point forecast.
 
-**9. A break that cannot be forecast can still be detected early.**
-A CUSUM chart on one-month-ahead ETS errors, with textbook settings (allowance 0.5, threshold 4
-standard deviations) and using only forecasts already scored, raised 13 alarms across the five
-categories in 77 months.
+For a statement about calendar months, take one-month-ahead plans only, where each category
+has one plan per month.
+
+| 90th percentile plan, one month ahead | Months short | Share |
+|---|---|---|
+| Robbery | 8 of 77 | 10% |
+| Mischief | 8 of 77 | 10% |
+| Break and enter | 10 of 77 | 13% |
+| Theft from vehicle | 14 of 77 | 18% |
+| Vehicle theft | 16 of 77 | 21% |
+| Average | | 14.5% |
+
+By year the average was 20% in 2020, 25% in 2021, then 8% to 10% in 2023 to 2025.
+
+**9. A monitor on forecast errors signalled early in the surge.**
+A historical case, not a validated warning system. A CUSUM chart on one-month-ahead ETS errors,
+with textbook settings (allowance 0.5, threshold 4 standard deviations) and using only
+forecasts already scored, raised 13 alarms across the five categories in 77 months. Months are
+those the incidents occurred in; a monitor would see each once that month's data was published.
 
 | Category | Alarms | When |
 |---|---|---|
@@ -217,14 +232,19 @@ categories in 77 months.
 | Mischief | 2 | Apr 2020 (below), Dec 2023 (above) |
 | Robbery | 1 | Jun 2025 (above) |
 
-For vehicle theft the first upward alarm came in April 2021, as counts recovered from a
-February low, and a second in July 2021 at 652 thefts against a 2020 average of 392. The peak
-of 1,205 came in August 2023, 25 months after the July alarm. The monitor could not say how far
-the surge would go, but it flagged that the forecasts had stopped working while most of the
-rise was still ahead.
+For vehicle theft the first upward alarm came in April 2021, at 402 thefts against a forecast
+of 342, two months after a downward alarm at a February low. The second came in July 2021 at
+652 thefts, against a 2020 average of 392. Counts peaked at 1,205 in August 2023. The same
+threshold triggered both alarms, and nothing in the chart marks one as more meaningful than
+the other.
 
-It did not flag the decline. After the peak the ETS intervals had widened enough that the
-falling counts stayed within them.
+No downward alarm followed the peak. Counts stayed below forecast for six months, then
+rebounded in spring 2024, and the accumulated deviation never reached the threshold. Wider
+stated uncertainty was not the reason: rescaling the errors to the 2020 level of uncertainty
+still gives no downward alarm.
+
+With no independent record of when real changes occurred, these results give an alarm count,
+not a false-alarm rate or a detection delay.
 
 ## Results in numbers
 

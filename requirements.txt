@@ -1,8 +1,8 @@
-pandas
-numpy
-statsforecast
-pyarrow
-matplotlib
-lightgbm
-scikit-learn
-scipy
+pandas==2.3.3
+numpy==2.5.3
+statsforecast==2.1.1
+pyarrow==26.0.1
+matplotlib==3.11.2
+lightgbm==4.7.0
+scikit-learn==1.9.1
+scipy==1.18.1
