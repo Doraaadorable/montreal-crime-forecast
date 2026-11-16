@@ -103,7 +103,7 @@ the committed results, use the data version in `data/manifest.json`: place that 
 
 ```bash
 python src/run_all.py --skip-download   # about 22 minutes on 4 cores
-python src/verify_outputs.py            # compares 40 outputs with results/output_hashes.sha256
+python src/verify_outputs.py            # compares 38 outputs with results/output_hashes.sha256
 ```
 
 With that data file and the environment in `results/environment.txt`, a run from a fresh clone
