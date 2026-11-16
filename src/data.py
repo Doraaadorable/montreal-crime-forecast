@@ -48,8 +48,8 @@ def monthly_by_category(df: pd.DataFrame, drop_last_n_months: int = 1) -> pd.Dat
 
 # Districts merged over the period, mapped to today's boundaries so each series is
 # continuous. 22 -> 21 and 55 -> 5 are documented in the SPVM monthly report
-# methodology; 11 -> 9, 24 -> 26 and 33 -> 31 are inferred from this dataset, where one
-# district stops reporting in the year a neighbour's counts jump (see README, Limitations).
+# methodology; 24 -> 26 (2019), 11 -> 9 (2020) and 33 -> 31 (2021) in SPVM integration
+# documents, consistent with where each absorbed district's counts end in this dataset.
 PDQ_MERGERS = {11: 9, 24: 26, 33: 31, 22: 21, 55: 5}
 
 

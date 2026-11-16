@@ -1,0 +1,16 @@
+comparison,error_ratio,ci_low,ci_high,verdict,share_of_origins_A_wins
+Citywide: ETS vs same month last year,0.81,0.707,0.863,A better,0.75
+  1 month ahead,0.603,0.511,0.656,A better,0.88
+  6 months ahead,0.917,0.81,0.989,A better,0.56
+  Break and enter,0.965,0.825,1.103,not distinguishable,0.58
+  Mischief,0.82,0.7,0.921,A better,0.65
+  Robbery,0.898,0.76,1.079,not distinguishable,0.61
+  Theft from vehicle,0.809,0.699,0.852,A better,0.75
+  Vehicle theft,0.698,0.532,0.855,A better,0.7
+Citywide: ARIMA vs ETS,1.004,0.945,1.093,not distinguishable,0.53
+Citywide: ensemble vs ETS,0.971,0.951,1.002,not distinguishable,0.71
+Citywide: ensemble vs same month last year,0.787,0.697,0.833,A better,0.82
+District: global model vs top-down,0.987,0.977,1.001,not distinguishable,0.68
+District: global model vs separate ETS,0.937,0.924,0.958,A better,0.9
+District: top-down vs separate ETS,0.95,0.928,0.971,A better,0.75
+District: separate ETS vs same month last year,0.814,0.789,0.828,A better,1.0

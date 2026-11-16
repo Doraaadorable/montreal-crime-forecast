@@ -4,3 +4,4 @@ __pycache__/
 .ipynb_checkpoints/
 results/hierarchy_*forecasts.parquet
 site/_artifact.html
+.pytest_cache/

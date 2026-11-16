@@ -30,8 +30,9 @@ calibration history still holds the shock; an adaptive version stays near 81%.
 
 **3. For small districts, simple pooling beats separate models.**
 A typical district-level series has 14 incidents a month. Splitting the citywide forecast by
-each district's share of the last year is more accurate than fitting a model per district, and
-a single model trained on all 145 district series is only 1% better than that split.
+each district's share of the last year is more accurate than fitting a model per district. A
+single model trained on all 145 district series scores 1% better than that split, a gap too
+small to tell from chance.
 
 | District-level accuracy (MASE, lower is better) | All horizons | 1 month | 6 months |
 |---|---|---|---|
@@ -43,6 +44,23 @@ a single model trained on all 145 district series is only 1% better than that sp
 Citywide, models cut the benchmark's error by about 19%, mostly at short horizons: one month
 ahead MASE is 0.75 against 1.25, and by six months the gap has nearly closed.
 
+## How sure are these comparisons?
+
+Error ratios with 95% intervals from a block bootstrap over the 77 forecast origins. A ratio
+below 1 favours the first method; an interval that includes 1 means the data cannot separate
+the two.
+
+| Comparison | Error ratio | 95% interval |
+|---|---|---|
+| Citywide: ETS vs same month last year | 0.81 | 0.71 to 0.86 |
+| Same, 6 months ahead | 0.92 | 0.81 to 0.99 |
+| Citywide: average of ETS, ARIMA, Theta vs ETS | 0.97 | 0.95 to 1.00 |
+| District: top-down split vs separate ETS | 0.95 | 0.93 to 0.97 |
+| District: one model for all series vs top-down split | 0.99 | 0.98 to 1.00 |
+
+The lead over the benchmark is solid overall, but for break and enter and for robbery taken
+alone it is not distinguishable from chance. Neither is the choice between ETS and ARIMA.
+
 ## Method in brief
 
 - **Data.** 365,404 incidents recorded by the Service de police de la Ville de Montréal (SPVM),
@@ -53,6 +71,8 @@ ahead MASE is 0.75 against 1.25, and by six months the gap has nearly closed.
   benchmarks.
 - **Uncertainty.** Empirical coverage and interval scores; split and adaptive conformal
   calibration; Poisson and negative binomial intervals for small counts.
+- **Significance.** Moving-block bootstrap (blocks of 12 origins) on error ratios, because
+  errors at neighbouring origins overlap.
 - **Hierarchy.** City, category, district and category by district (180 series), reconciled
   with bottom-up, top-down, OLS and WLS projections written out in `src/hierarchy.py`.
 
@@ -64,7 +84,8 @@ known at the forecast origin.
 - The counts are incidents **recorded** by police. They reflect reporting and recording
   practice as well as underlying crime, and they are not a measure of neighbourhood risk.
 - The SPVM states this dataset is not its official statistics, and recent months can be revised.
-- Three of the five district mergers were inferred from the data and should be confirmed.
+- Five districts merged with neighbours during the period; their history is mapped to
+  today's boundaries, so district results describe current districts.
 - This is an accuracy study, not a tool for deploying police resources.
 
 The full list is in [docs/FINDINGS.md](docs/FINDINGS.md#limitations).
@@ -78,11 +99,13 @@ python src/backtest.py        # about 2 minutes on 4 cores
 python src/calibrate.py
 python src/hierarchy.py       # about 6 minutes on 4 cores
 python src/count_models.py    # about 1 minute
+python src/significance.py
 python src/figures.py
 python src/build_page.py      # rebuilds docs/index.html
 ```
 
-Results depend on the download date, because the source is updated daily.
+Results depend on the download date, because the source is updated daily. `pytest` runs checks
+on the reconciliation, calibration and bootstrap code without needing the data.
 
 ## Data source
 
