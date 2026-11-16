@@ -19,7 +19,9 @@ since 2023 it cannot be told from zero.
 
 **2. A structural break defeats every method tested.**
 On 2021 forecast months, ETS errors on vehicle theft were 2.6 times the benchmark scale, and
-only 40% of outcomes fell inside its 80% interval.
+only 40% of outcomes fell inside its 80% interval. Fitting on only the last two or three years
+did not help (error ratio 0.98, interval 0.95 to 1.05) and raised errors on the other four
+categories by 25% to 45%.
 
 ![Vehicle theft forecasts](figures/fig4_vehicle_theft.png)
 
@@ -36,6 +38,11 @@ A typical district series has 14 incidents a month. Splitting the citywide forec
 district's share of the last year beats a model per district by 5%. Pooling is what
 helps: with the model and its inputs held fixed, training on all 145 series at once cuts error
 by 7% against training each series alone (ratio 0.93, 95% interval 0.91 to 0.95).
+
+**5. A planner aiming to be short one month in ten would have been short one in six.**
+Planning capacity to the forecast's 90th percentile left a shortfall in 17.5% of months: 28%
+in 2021, 9% in 2024. That plan still costs 29% less than "last year plus 20%", but only 6%
+less than a flat 20% margin on the ETS forecast.
 
 ## Which differences are real
 
@@ -89,6 +96,8 @@ python src/hierarchy.py       # about 6 minutes on 4 cores
 python src/count_models.py    # about 1 minute
 python src/pooling_test.py    # about 10 minutes
 python src/significance.py
+python src/adaptation.py
+python src/planning.py
 python src/figures.py
 python src/build_page.py      # rebuilds docs/index.html
 pytest                        # method checks, no data needed

@@ -1,0 +1,13 @@
+series,period,memory,error_ratio_vs_full_history,ci_low,ci_high
+Other four categories,2021 to 2023,last 24 months,1.454,1.339,1.542
+Other four categories,2021 to 2023,last 36 months,1.417,1.286,1.518
+Other four categories,2021 to 2023,last 60 months,1.151,1.06,1.339
+Other four categories,other years,last 24 months,1.248,1.1,1.365
+Other four categories,other years,last 36 months,1.326,1.227,1.44
+Other four categories,other years,last 60 months,1.038,0.989,1.126
+Vehicle theft,2021 to 2023,last 24 months,0.98,0.949,1.047
+Vehicle theft,2021 to 2023,last 36 months,0.981,0.949,1.022
+Vehicle theft,2021 to 2023,last 60 months,1.014,0.992,1.021
+Vehicle theft,other years,last 24 months,1.031,1.003,1.099
+Vehicle theft,other years,last 36 months,1.017,0.996,1.029
+Vehicle theft,other years,last 60 months,0.99,0.911,1.123

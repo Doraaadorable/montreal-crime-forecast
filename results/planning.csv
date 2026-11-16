@@ -1,0 +1,19 @@
+period,plan,shortfall_rate,spare_capacity_pct,cost
+All years,ETS 90th percentile,0.175,19.29,0.262
+All years,"ETS forecast, no margin",0.527,6.358,0.562
+All years,ETS forecast + 10%,0.325,12.409,0.358
+All years,ETS forecast + 20%,0.178,20.221,0.28
+All years,Last year's count + 10%,0.345,14.526,0.468
+All years,Last year's count + 20%,0.231,22.213,0.368
+2020 to 2022,ETS 90th percentile,0.24,16.552,0.328
+2020 to 2022,"ETS forecast, no margin",0.579,6.045,0.727
+2020 to 2022,ETS forecast + 10%,0.408,11.043,0.472
+2020 to 2022,ETS forecast + 20%,0.237,17.923,0.349
+2020 to 2022,Last year's count + 10%,0.424,11.713,0.675
+2020 to 2022,Last year's count + 20%,0.339,18.021,0.525
+2023 to 2026,ETS 90th percentile,0.125,21.177,0.211
+2023 to 2026,"ETS forecast, no margin",0.487,6.575,0.435
+2023 to 2026,ETS forecast + 10%,0.261,13.351,0.27
+2023 to 2026,ETS forecast + 20%,0.133,21.806,0.227
+2023 to 2026,Last year's count + 10%,0.285,16.466,0.308
+2023 to 2026,Last year's count + 20%,0.148,25.103,0.247

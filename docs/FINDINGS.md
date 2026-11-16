@@ -21,6 +21,21 @@ of outcomes fell inside its 80% interval.
 
 ![Vehicle theft forecasts](../figures/fig4_vehicle_theft.png)
 
+A model with a shorter memory should adapt faster. It did not. Refitting ETS on only the last
+24, 36 or 60 months made no clear difference on vehicle theft during the surge, and cost 25%
+to 45% in accuracy on the other categories.
+
+| Error ratio vs full history (95% interval) | Last 24 months | Last 36 months | Last 60 months |
+|---|---|---|---|
+| Vehicle theft, 2021 to 2023 | 0.98 (0.95 to 1.05) | 0.98 (0.95 to 1.02) | 1.01 (0.99 to 1.02) |
+| Vehicle theft, other years | 1.03 (1.00 to 1.10) | 1.02 (1.00 to 1.03) | 0.99 (0.91 to 1.12) |
+| Other four categories, 2021 to 2023 | 1.45 (1.34 to 1.54) | 1.42 (1.29 to 1.52) | 1.15 (1.06 to 1.34) |
+| Other four categories, other years | 1.25 (1.10 to 1.37) | 1.33 (1.23 to 1.44) | 1.04 (0.99 to 1.13) |
+
+ETS already weights recent months more heavily, so discarding old data adds little
+responsiveness and removes the history needed to estimate seasonality. The surge was not
+visible in the series' own past, whatever the length of memory.
+
 **3. Prediction intervals fail exactly when they matter.**
 During 2020 and 2021, nominal 80% intervals from ETS covered 50% and 61% of outcomes. From 2023
 onward they covered 78% to 81%. A single coverage number averaged over the whole period would
@@ -166,6 +181,28 @@ The ensemble is the plain average of the ETS, ARIMA and Theta forecasts. It has 
 citywide MASE (0.98 against 1.01 for ETS) and beats ETS at 71% of origins, but the interval
 just reaches 1. On vehicle theft, ETS is far better than the benchmark (ratio 0.70) and still
 a poor forecast in absolute terms (MASE 1.46).
+
+**8. What this means for planning.**
+Suppose workload scales with recorded incidents and running short costs nine times as much as
+holding spare capacity. The plan that fits those costs is the 90th percentile of the forecast,
+which should fall short in 10% of months.
+
+| Plan | Months short | Spare capacity | Cost |
+|---|---|---|---|
+| ETS 90th percentile | 17.5% | 19% | **0.262** |
+| ETS forecast + 20% | 17.8% | 20% | 0.280 |
+| ETS forecast + 10% | 32.5% | 12% | 0.358 |
+| Last year's count + 20% | 23.1% | 22% | 0.368 |
+| Last year's count + 10% | 34.5% | 15% | 0.468 |
+| ETS forecast, no margin | 52.7% | 6% | 0.562 |
+
+Spare capacity is the amount planned above what happened, as a share of actual incidents. Cost
+weights shortfall 9 to 1 against spare capacity, on the MASE scale.
+
+The 90th-percentile plan fell short in 28% of months in 2021 and 9% in 2024, and 23% of the
+time for vehicle theft across the whole period. Forecast-based plans beat plans based on last
+year's count by 29%. The model's own interval beats a flat 20% margin on the same forecast by
+only 6%, so most of the value is in the point forecast.
 
 ## Results in numbers
 
