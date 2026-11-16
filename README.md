@@ -21,7 +21,9 @@ since 2023 it cannot be told from zero.
 On 2021 forecast months, ETS errors on vehicle theft were 2.6 times the benchmark scale, and
 only 40% of outcomes fell inside its 80% interval. Fitting on only the last two or three years
 did not help (error ratio 0.98, interval 0.95 to 1.05) and raised errors on the other four
-categories by 25% to 45%.
+categories by 25% to 45%. Detection was faster than forecasting: a standard monitor on the
+forecast errors raised a clear alarm in July 2021, at 652 thefts a month, 25 months before the
+peak of 1,205.
 
 ![Vehicle theft forecasts](figures/fig4_vehicle_theft.png)
 
@@ -89,19 +91,11 @@ from what was published at the time.
 
 ```bash
 pip install -r requirements.txt
-python src/download_data.py   # about 365,000 rows from the open data API
-python src/backtest.py        # about 2 minutes on 4 cores
-python src/calibrate.py
-python src/hierarchy.py       # about 6 minutes on 4 cores
-python src/count_models.py    # about 1 minute
-python src/pooling_test.py    # about 10 minutes
-python src/significance.py
-python src/adaptation.py
-python src/planning.py
-python src/figures.py
-python src/build_page.py      # rebuilds docs/index.html
+python src/run_all.py         # every step in order, about 30 minutes on 4 cores
 pytest                        # method checks, no data needed
 ```
+
+`src/run_all.py` lists the steps; each script also runs on its own.
 
 The source is updated daily, so numbers shift slightly with the download date.
 

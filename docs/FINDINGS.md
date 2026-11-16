@@ -204,6 +204,28 @@ time for vehicle theft across the whole period. Forecast-based plans beat plans 
 year's count by 29%. The model's own interval beats a flat 20% margin on the same forecast by
 only 6%, so most of the value is in the point forecast.
 
+**9. A break that cannot be forecast can still be detected early.**
+A CUSUM chart on one-month-ahead ETS errors, with textbook settings (allowance 0.5, threshold 4
+standard deviations) and using only forecasts already scored, raised 13 alarms across the five
+categories in 77 months.
+
+| Category | Alarms | When |
+|---|---|---|
+| Vehicle theft | 4 | Feb 2021 (below), Apr 2021, Jul 2021, May 2022 (above) |
+| Theft from vehicle | 3 | Feb 2020 (above), May 2020 (below), Jul 2021 (above) |
+| Break and enter | 3 | May 2020, Feb 2021 (below), May 2022 (above) |
+| Mischief | 2 | Apr 2020 (below), Dec 2023 (above) |
+| Robbery | 1 | Jun 2025 (above) |
+
+For vehicle theft the first upward alarm came in April 2021, as counts recovered from a
+February low, and a second in July 2021 at 652 thefts against a 2020 average of 392. The peak
+of 1,205 came in August 2023, 25 months after the July alarm. The monitor could not say how far
+the surge would go, but it flagged that the forecasts had stopped working while most of the
+rise was still ahead.
+
+It did not flag the decline. After the peak the ETS intervals had widened enough that the
+falling counts stayed within them.
+
 ## Results in numbers
 
 Rolling-origin backtest, origins December 2019 to April 2026, horizons 1 to 6 months.

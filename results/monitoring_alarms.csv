@@ -1,0 +1,14 @@
+category,month,direction,recorded,forecast
+Break and enter,2020-05,below forecast,415.0,542.0
+Break and enter,2021-02,below forecast,277.0,364.0
+Break and enter,2022-05,above forecast,587.0,466.0
+Mischief,2020-04,below forecast,324.0,575.0
+Mischief,2023-12,above forecast,617.0,474.0
+Robbery,2025-06,above forecast,196.0,172.0
+Theft from vehicle,2020-02,above forecast,693.0,529.0
+Theft from vehicle,2020-05,below forecast,376.0,588.0
+Theft from vehicle,2021-07,above forecast,749.0,582.0
+Vehicle theft,2021-02,below forecast,242.0,374.0
+Vehicle theft,2021-04,above forecast,402.0,342.0
+Vehicle theft,2021-07,above forecast,652.0,571.0
+Vehicle theft,2022-05,above forecast,846.0,705.0
