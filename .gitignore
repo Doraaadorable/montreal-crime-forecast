@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 results/hierarchy_*forecasts.parquet
+site/_artifact.html
