@@ -3,3 +3,6 @@ numpy
 statsforecast
 pyarrow
 matplotlib
+lightgbm
+scikit-learn
+scipy

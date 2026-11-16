@@ -58,6 +58,33 @@ total by each district's share of the last 12 months, is the most accurate at di
 MASE pooled within each level, same 77 origins and horizons as above. No single method wins at
 every level: bottom-up is clearly worst for the city total, and WLS is best for categories.
 
+**6. For small counts, the distribution matters more than the model.**
+At the finest level (one category in one district), a single gradient-boosting model with a
+Poisson loss, trained on all 145 series at once, is the most accurate method, but only just: its
+error is 1% lower than the top-down split overall and it wins at 68% of origins. Its edge is at
+1 to 2 months ahead; from 3 months on the two are level. For the 20 sparsest series (under 5
+incidents a month), per-series ETS is still best.
+
+| Method (category x district) | All | 1 month | 6 months | Under 5 a month |
+|---|---|---|---|---|
+| Global Poisson boosting | **0.80** | **0.71** | **0.85** | 0.79 |
+| Top-down (last-year shares) | 0.81 | 0.76 | 0.85 | 0.78 |
+| Independent ETS | 0.85 | 0.76 | 0.91 | **0.77** |
+| Same month last year | 1.05 | 1.05 | 1.05 | 0.99 |
+
+The choice of predictive distribution has a larger effect than the choice of model. A Poisson
+interval assumes variance equals the mean and covers only 66% of outcomes at a nominal 80%.
+Allowing extra variance with a negative binomial gives the best interval score, though it
+over-covers at 87%.
+
+| 80% interval (category x district) | Coverage | Mean width | Interval score |
+|---|---|---|---|
+| Global boosting + negative binomial | 87.2% | 18.7 | **3.73** |
+| Top-down + negative binomial | 86.4% | 18.7 | **3.73** |
+| ETS normal interval | 77.4% | 17.2 | 3.96 |
+| Global boosting + Poisson | 66.4% | 9.8 | 4.29 |
+| Top-down + Poisson | 65.1% | 9.8 | 4.33 |
+
 ## Results in numbers
 
 Rolling-origin backtest, origins December 2019 to April 2026, horizons 1 to 6 months.
@@ -96,6 +123,10 @@ misses; lower is better.
 - **Hierarchy.** 5 categories by 29 districts (145 bottom series), plus district, category and
   city totals. Reconciliation is implemented from the projection formula in `src/hierarchy.py`:
   bottom-up, top-down, and OLS and structurally weighted (WLS) projections.
+- **Count models.** A LightGBM model with a Poisson objective, one per horizon and origin,
+  trained across all 145 district series on lags, rolling means, the seasonal lag and category
+  momentum. Hyperparameters were fixed in advance and not tuned. Negative binomial dispersion
+  is estimated at each origin from forecasts whose outcomes were already known.
 - **Calibration.** Split conformal on relative errors with an expanding and a 36-forecast
   window, and adaptive conformal inference (Gibbs and Candès, 2021) with a step size fixed in
   advance at 0.05. Every calibration set uses only outcomes observed before the forecast origin.
@@ -110,7 +141,10 @@ misses; lower is better.
 - Five districts were merged into neighbours during the period. Their history is mapped to
   today's boundaries. Two mergers are documented by the SPVM; the other three (11 into 9, 24
   into 26, 33 into 31) are inferred from the data and should be confirmed.
-- District results are point forecasts only; intervals were not evaluated at that level.
+- District intervals were evaluated at the finest level only, with one dispersion value
+  shared by all series. Count intervals are whole numbers, which pushes coverage above target.
+- The global model's lead over the top-down split is small and was not tested for
+  statistical significance.
 - "Offences causing death" (two or three a month) is excluded as too sparse for these models.
 - The adaptive conformal results start in December 2021, so that method was not tested through
   the 2020 shock itself.
@@ -124,6 +158,7 @@ python src/download_data.py   # about 365,000 rows from the open data API
 python src/backtest.py        # about 2 minutes on 4 cores
 python src/calibrate.py
 python src/hierarchy.py       # about 6 minutes on 4 cores
+python src/count_models.py    # about 1 minute
 python src/figures.py
 ```
 
@@ -131,8 +166,8 @@ Results depend on the download date, because the source is updated daily.
 
 ## Next steps
 
-- Prediction intervals for the district hierarchy.
-- Count models and methods that adapt faster to level shifts.
+- Coherent prediction intervals across the whole district hierarchy.
+- Series-specific dispersion, and methods that adapt faster to level shifts.
 - An explicit treatment of late revisions in recent months.
 
 ## Data source

@@ -1,7 +1,7 @@
 method,Total,Category,District,Category x district
 Top-down,0.837,0.972,0.795,0.809
 WLS reconciliation,0.875,0.922,0.808,0.852
-ETS base (not coherent),0.837,1.003,0.839,0.852
 Bottom-up,0.938,0.977,0.83,0.852
+ETS base (not coherent),0.837,1.003,0.839,0.852
 OLS reconciliation,0.839,0.979,0.819,0.874
 Same month last year,1.192,1.256,1.03,1.047

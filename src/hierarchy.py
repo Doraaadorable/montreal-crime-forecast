@@ -54,7 +54,8 @@ def base_forecasts(all_series: pd.DataFrame) -> pd.DataFrame:
         models=[AutoETS(season_length=SEASON), SeasonalNaive(season_length=SEASON)],
         freq="MS", n_jobs=-1,
     )
-    cv = sf.cross_validation(df=long, h=HORIZON, step_size=1, n_windows=n_windows, refit=True)
+    cv = sf.cross_validation(df=long, h=HORIZON, step_size=1, n_windows=n_windows,
+                             level=[80], refit=True)
     return cv.reset_index() if "unique_id" not in cv.columns else cv
 
 
@@ -125,6 +126,7 @@ def main() -> None:
           all_series.median().groupby(level).median().reindex(LEVELS).round(1))
 
     cv = base_forecasts(all_series)
+    cv.to_parquet(RESULTS / "hierarchy_base_forecasts.parquet", index=False)
     rec = add_scale(reconcile(cv, all_series, S), all_series)
     rec["level"] = rec["unique_id"].map(level)
     rec["horizon"] = ((rec["ds"].dt.year - rec["cutoff"].dt.year) * 12

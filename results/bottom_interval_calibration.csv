@@ -1,0 +1,6 @@
+method,coverage80,mean_width,interval_score,n
+ETS (normal interval),0.774,17.154,3.964,61335
+Global boosting + Poisson,0.664,9.841,4.285,61335
+Global boosting + negative binomial,0.872,18.736,3.73,61335
+Top-down + Poisson,0.651,9.817,4.334,61335
+Top-down + negative binomial,0.864,18.695,3.734,61335
