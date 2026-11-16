@@ -1,94 +1,71 @@
 # When can monthly crime forecasts be trusted?
 
-A forecasting study of recorded property and violent incidents in Montréal, 2015 to 2026.
+Between 2020 and 2023, vehicle thefts in Montréal more than doubled, then fell 43% in two
+years. No forecasting model caught either turn. This project replays six years of forecasts on
+365,000 police-recorded incidents to find where forecasts hold up and where they break.
 
-**Author:** Dora Zhuang
+**Dora Zhuang** ·
+[Interactive summary](https://doraaadorable.github.io/montreal-crime-forecast/) ·
+[Full findings](docs/FINDINGS.md)
 
-Most forecasting write-ups report one accuracy number from one test period. This project tests
-forecasts at 77 different starting points over six years, across five crime categories and 29
-police districts, and asks where statistical models add value over "same month last year" and
-how far their uncertainty ranges can be trusted.
+## Findings
 
-**[Interactive summary](https://doraaadorable.github.io/montreal-crime-forecast/)** ·
-**[All six findings, with tables](docs/FINDINGS.md)**
+Every model is refit at 77 points in time and forecasts 1 to 6 months ahead, using only the
+data available at that point.
 
-## Three findings
+**1. Models beat "same month last year" by 19%, mostly in the short run.**
+One month ahead, ETS cuts the benchmark's error by 40%. Six months ahead the gain is 8%.
 
-**1. A structural break defeats every method.**
-Vehicle thefts rose from about 4,400 a year to 11,500 in 2023, then fell back. No model
-anticipated either turn. On 2021 forecast months, ETS errors were 2.6 times the benchmark
-scale, and only 40% of outcomes fell inside its 80% interval.
+**2. A structural break defeats every method.**
+On 2021 forecast months, ETS errors on vehicle theft were 2.6 times the benchmark scale, and
+only 40% of outcomes fell inside its 80% interval.
 
 ![Vehicle theft forecasts](figures/fig4_vehicle_theft.png)
 
-**2. Prediction intervals fail exactly when they matter.**
-In 2020 and 2021, nominal 80% intervals covered 50% and 61% of outcomes. From 2023 onward they
-covered 78% to 81%. Standard conformal recalibration then overcorrects to 91%, because its
-calibration history still holds the shock; an adaptive version stays near 81%.
+**3. Uncertainty ranges fail when they matter.**
+80% intervals covered 50% of outcomes in 2020 and 61% in 2021, then 78% to 81% from 2023 on.
+Standard conformal recalibration overcorrects to 91% because its history still holds the
+shock. An adaptive version stays at 81%.
 
 ![Coverage by year](figures/fig3_coverage_by_year.png)
 
-**3. For small districts, simple pooling beats separate models.**
-A typical district-level series has 14 incidents a month. Splitting the citywide forecast by
-each district's share of the last year is more accurate than fitting a model per district. A
-single model trained on all 145 district series scores 1% better than that split, a gap too
-small to tell from chance.
+**4. For small districts, pooling beats separate models.**
+A typical district series has 14 incidents a month. Splitting the citywide forecast by each
+district's share of the last year beats a model per district by 5%.
 
-| District-level accuracy (MASE, lower is better) | All horizons | 1 month | 6 months |
-|---|---|---|---|
-| One model for all series (Poisson boosting) | **0.80** | **0.71** | **0.85** |
-| Split the city forecast by last-year shares | 0.81 | 0.76 | 0.85 |
-| Separate ETS model per series | 0.85 | 0.76 | 0.91 |
-| Same month last year | 1.05 | 1.05 | 1.05 |
+## Which differences are real
 
-Citywide, models cut the benchmark's error by about 19%, mostly at short horizons: one month
-ahead MASE is 0.75 against 1.25, and by six months the gap has nearly closed.
-
-## How sure are these comparisons?
-
-Error ratios with 95% intervals from a block bootstrap over the 77 forecast origins. A ratio
-below 1 favours the first method; an interval that includes 1 means the data cannot separate
-the two.
+Error ratios with 95% intervals from a block bootstrap over the 77 forecast origins. Below 1
+favours the first method. An interval that includes 1 means the two cannot be separated.
 
 | Comparison | Error ratio | 95% interval |
 |---|---|---|
 | Citywide: ETS vs same month last year | 0.81 | 0.71 to 0.86 |
+| Same, 1 month ahead | 0.60 | 0.51 to 0.66 |
 | Same, 6 months ahead | 0.92 | 0.81 to 0.99 |
+| Citywide: ARIMA vs ETS | 1.00 | 0.95 to 1.09 |
 | Citywide: average of ETS, ARIMA, Theta vs ETS | 0.97 | 0.95 to 1.00 |
 | District: top-down split vs separate ETS | 0.95 | 0.93 to 0.97 |
-| District: one model for all series vs top-down split | 0.99 | 0.98 to 1.00 |
+| District: one pooled model vs top-down split | 0.99 | 0.98 to 1.00 |
 
-The lead over the benchmark is solid overall, but for break and enter and for robbery taken
-alone it is not distinguishable from chance. Neither is the choice between ETS and ARIMA.
+Model choice matters less than expected: ETS and ARIMA are tied, and a pooled gradient-boosting
+model is tied with the top-down split.
 
-## Method in brief
+## Method
 
 - **Data.** 365,404 incidents recorded by the Service de police de la Ville de Montréal (SPVM),
-  January 2015 to October 2026.
-- **Backtest.** At each of 77 origins every model is refit on the data available then, and
-  forecasts 1 to 6 months ahead with 80% and 95% intervals.
-- **Models.** ETS, ARIMA and Theta; a pooled LightGBM model with a Poisson loss; two naive
-  benchmarks.
-- **Uncertainty.** Empirical coverage and interval scores; split and adaptive conformal
-  calibration; Poisson and negative binomial intervals for small counts.
-- **Significance.** Moving-block bootstrap (blocks of 12 origins) on error ratios, because
-  errors at neighbouring origins overlap.
+  January 2015 to October 2026, in five categories and 29 police districts.
+- **Backtest.** 77 rolling origins, horizons of 1 to 6 months, 80% and 95% intervals.
+- **Models.** ETS, ARIMA, Theta, their average, a pooled LightGBM model with a Poisson loss,
+  and two naive benchmarks. Hyperparameters were fixed in advance.
+- **Uncertainty.** Coverage and interval scores; split and adaptive conformal calibration;
+  Poisson and negative binomial intervals for small counts.
 - **Hierarchy.** City, category, district and category by district (180 series), reconciled
-  with bottom-up, top-down, OLS and WLS projections written out in `src/hierarchy.py`.
+  bottom-up, top-down, and by OLS and WLS projection, written out in `src/hierarchy.py`.
+- **Significance.** Moving-block bootstrap on error ratios, in blocks of 12 origins.
 
-No hyperparameters were tuned on the backtest, and every calibration step uses only outcomes
-known at the forecast origin.
-
-## Limitations
-
-- The counts are incidents **recorded** by police. They reflect reporting and recording
-  practice as well as underlying crime, and they are not a measure of neighbourhood risk.
-- The SPVM states this dataset is not its official statistics, and recent months can be revised.
-- Five districts merged with neighbours during the period; their history is mapped to
-  today's boundaries, so district results describe current districts.
-- This is an accuracy study, not a tool for deploying police resources.
-
-The full list is in [docs/FINDINGS.md](docs/FINDINGS.md#limitations).
+The counts are incidents recorded by police, so they reflect reporting and recording practice
+as well as crime itself.
 
 ## Reproduce
 
@@ -102,13 +79,13 @@ python src/count_models.py    # about 1 minute
 python src/significance.py
 python src/figures.py
 python src/build_page.py      # rebuilds docs/index.html
+pytest                        # method checks, no data needed
 ```
 
-Results depend on the download date, because the source is updated daily. `pytest` runs checks
-on the reconciliation, calibration and bootstrap code without needing the data.
+The source is updated daily, so numbers shift slightly with the download date.
 
-## Data source
+## Data and license
 
-[Actes criminels](https://donnees.montreal.ca/dataset/actes-criminels), Service de police de la
-Ville de Montréal, via the Ville de Montréal open data portal. Licensed under
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Data: [Actes criminels](https://donnees.montreal.ca/dataset/actes-criminels), Service de police
+de la Ville de Montréal, Ville de Montréal open data portal,
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Code: [MIT](LICENSE).

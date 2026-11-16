@@ -46,6 +46,10 @@ h1 { font: 800 clamp(34px, 6.2vw, 60px)/1.02 var(--display); letter-spacing: -0.
 h2 { font: 700 clamp(22px, 3.2vw, 30px)/1.15 var(--display); letter-spacing: -0.01em; margin: 0 0 12px; text-wrap: balance; }
 p { margin: 0 0 14px; }
 .lede { font-size: 19px; line-height: 1.5; color: var(--ink-2); }
+.spec { font: 500 13px/1.6 var(--mono); color: var(--ink); margin: 18px 0 0; }
+.spec span { color: var(--benchmark); padding: 0 4px; }
+.replay { font: 500 14px/1 var(--text); color: var(--bg); background: var(--forecast); border: 0; border-radius: 999px; padding: 9px 16px; cursor: pointer; }
+.replay[disabled] { opacity: 0.6; cursor: default; }
 a { color: var(--forecast); }
 a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--forecast); outline-offset: 2px; }
 section { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
@@ -96,13 +100,14 @@ footer p { margin: 0 0 6px; }
   <header class="prose">
     <p class="kicker">Forecasting study · Dora Zhuang</p>
     <h1>When can monthly crime forecasts be trusted?</h1>
-    <p class="lede">I tested forecasts of recorded incidents in Montréal at 77 different starting points between 2019 and 2026. Models beat "same month last year" by about 19% overall. They failed, along with their uncertainty ranges, when vehicle theft tripled.</p>
+    <p class="lede">Between 2020 and 2023, vehicle thefts in Montréal more than doubled. Every forecasting model missed the surge, and so did the uncertainty ranges built to flag that kind of risk. This study replays six years of forecasts to show where they hold up and where they break.</p>
+    <p class="spec">365,404 police-recorded incidents <span>/</span> 77 forecast rounds <span>/</span> 180 series <span>/</span> 7 methods</p>
   </header>
 
   <section>
     <div class="prose">
-      <h2>See each forecast against what happened</h2>
-      <p>Every point on the blue line is a forecast made in advance, using only data available at the time. Choose a category and how far ahead the forecast was made.</p>
+      <h2>Watch the forecasts chase the surge</h2>
+      <p>Each point on the blue line was forecast in advance from the data available at the time. Press Replay, then try other categories and longer lead times.</p>
     </div>
     <div class="explorer">
       <div class="controls">
@@ -110,6 +115,7 @@ footer p { margin: 0 0 6px; }
         <div class="control"><span>Forecast made</span>
           <div class="slider"><input type="range" id="horizon" min="1" max="6" step="1" value="3" aria-label="Months ahead"><output id="horizon-out" for="horizon"></output></div>
         </div>
+        <button type="button" class="replay" id="replay">Replay</button>
       </div>
       <div class="legend">
         <span><i style="width:18px;height:2px;background:var(--ink)"></i>Recorded</span>
@@ -127,8 +133,8 @@ footer p { margin: 0 0 6px; }
     <div class="twocol">
       <div>
         <h2>Uncertainty ranges fail when they matter</h2>
-        <p>An 80% interval should contain the outcome 80% of the time. Across all categories it contained 50% in 2020 and 61% in 2021, then recovered once the shocks had passed.</p>
-        <p>Recalibrating with past errors overcorrects to 91%, because the calibration history still holds the shock. A version that adapts online stays at 81%.</p>
+        <p>An 80% interval should contain the outcome 80% of the time. It contained 50% in 2020 and 61% in 2021, then recovered once the shocks had passed.</p>
+        <p>Recalibrating on past errors overcorrects to 91%, because that history still holds the shock. A version that adapts as it goes stays at 81%.</p>
       </div>
       <div>
         <div class="chart" id="cov-chart"></div>
@@ -139,8 +145,8 @@ footer p { margin: 0 0 6px; }
 
   <section>
     <div class="prose">
-      <h2>For small districts, simple pooling beats separate models</h2>
-      <p>Split across 29 police districts, a typical series has 14 incidents a month. Dividing the citywide forecast by each district's share of the last year is more accurate than a model per district. One model trained on all 145 district series scores 1% better than that split, a gap too small to tell from chance.</p>
+      <h2>For small districts, pooling beats separate models</h2>
+      <p>Across 29 police districts, a typical series has 14 incidents a month. Dividing the citywide forecast by each district's share of the last year beats a model per district by 5%. One model trained on all 145 district series ties with that split.</p>
     </div>
     <div class="tablewrap">
       <table id="district-table"></table>
@@ -155,16 +161,16 @@ footer p { margin: 0 0 6px; }
         <ul class="plain">
           <li>365,404 incidents recorded by the SPVM, January 2015 to October 2026.</li>
           <li>At each of 77 starting points, every model is refit and forecasts 1 to 6 months ahead.</li>
-          <li>ETS, ARIMA and Theta; a pooled Poisson boosting model; two naive benchmarks.</li>
-          <li>No settings were tuned on the test results.</li>
+          <li>ETS, ARIMA, Theta and their average; a pooled Poisson boosting model; two naive benchmarks.</li>
+          <li>Counts are incidents recorded by police, so they reflect reporting practice as well as crime.</li>
         </ul>
       </div>
       <div>
-        <h2>What this does not show</h2>
+        <h2>Which results hold up</h2>
         <ul class="plain">
-          <li>These are incidents recorded by police. They reflect reporting and recording practice, and they do not measure neighbourhood risk.</li>
-          <li>The SPVM notes this dataset is not its official statistics, and recent months can be revised.</li>
-          <li>This is an accuracy study. It is not a tool for deploying police resources.</li>
+          <li>Models beat "same month last year": error ratio 0.81, 95% interval 0.71 to 0.86.</li>
+          <li>The gain fades with lead time: 0.60 one month ahead, 0.92 six months ahead.</li>
+          <li>ETS and ARIMA are tied (1.00, interval 0.95 to 1.09). Which model matters less than how far ahead and how stable the series is.</li>
         </ul>
       </div>
     </div>
@@ -202,11 +208,13 @@ footer p { margin: 0 0 6px; }
 
   /* Forecast explorer */
   const mainBox = document.getElementById("main-chart");
+  let reveal = () => {}, playing = 0;
   function drawMain() {
     const s = D.series[state.cat][state.h];
     const W = Math.max(300, mainBox.clientWidth), H = Math.round(Math.min(400, Math.max(260, W * 0.44)));
     const m = { l: 46, r: 12, t: 10, b: 28 };
-    mainBox.innerHTML = "";
+    mainBox.innerHTML = ""; playing++;
+    const replayButton = document.getElementById("replay"); if (replayButton) replayButton.disabled = false;
     const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${state.cat}: recorded incidents and forecasts made ${state.h} months ahead` }, mainBox);
     const n = s.ds.length;
     const yMax = Math.max(...s.hi, ...s.y) * 1.05;
@@ -225,14 +233,21 @@ footer p { margin: 0 0 6px; }
         lastLabelX = x(i);
       }
     });
+    const clipId = "reveal";
+    const clipRect = el("rect", { x: 0, y: 0, width: W, height: H }, el("clipPath", { id: clipId }, el("defs", {}, svg)));
+    const marks = el("g", { "clip-path": `url(#${clipId})` }, svg);
     const band = s.hi.map((v, i) => `${x(i)},${y(v)}`).concat(s.lo.map((v, i) => `${x(i)},${y(Math.max(v, 0))}`).reverse());
-    el("polygon", { points: band.join(" "), fill: "var(--band)", stroke: "none" }, svg);
+    el("polygon", { points: band.join(" "), fill: "var(--band)", stroke: "none" }, marks);
     const path = (arr) => arr.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
-    el("path", { d: path(s.f), fill: "none", stroke: "var(--forecast)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
-    el("path", { d: path(s.y), fill: "none", stroke: "var(--ink)", "stroke-width": 1.8, "stroke-linejoin": "round" }, svg);
+    el("path", { d: path(s.f), fill: "none", stroke: "var(--forecast)", "stroke-width": 2, "stroke-linejoin": "round" }, marks);
+    el("path", { d: path(s.y), fill: "none", stroke: "var(--ink)", "stroke-width": 1.8, "stroke-linejoin": "round" }, marks);
     s.y.forEach((v, i) => {
-      if (v < s.lo[i] || v > s.hi[i]) el("circle", { cx: x(i), cy: y(v), r: 4, fill: "var(--miss)", stroke: "var(--panel)", "stroke-width": 1.5 }, svg);
+      if (v < s.lo[i] || v > s.hi[i]) el("circle", { cx: x(i), cy: y(v), r: 4, fill: "var(--miss)", stroke: "var(--panel)", "stroke-width": 1.5 }, marks);
     });
+    const peak = s.y.indexOf(Math.max(...s.y));
+    const peakLabel = el("text", { x: x(peak) + (peak > n * 0.7 ? -8 : 8), y: Math.max(y(s.y[peak]) - 8, 12), "text-anchor": peak > n * 0.7 ? "end" : "start", fill: "var(--ink)", "font-size": 12, "font-family": "var(--mono)" }, marks);
+    peakLabel.textContent = `Peak ${fmt(s.y[peak])}, ${monthLabel(s.ds[peak])}`;
+    reveal = (t) => clipRect.setAttribute("width", m.l + t * (W - m.l - m.r) + (t >= 1 ? m.r : 0));
 
     const cross = el("line", { y1: m.t, y2: H - m.b, stroke: "var(--ink-2)", "stroke-width": 1, "stroke-dasharray": "3 3", visibility: "hidden" }, svg);
     const tip = document.createElement("div");
@@ -281,6 +296,18 @@ footer p { margin: 0 0 6px; }
   const slider = document.getElementById("horizon"), out = document.getElementById("horizon-out");
   function syncHorizon() { state.h = Number(slider.value); out.textContent = `${state.h} month${state.h > 1 ? "s" : ""} ahead`; drawMain(); }
   slider.addEventListener("input", syncHorizon);
+  const replayBtn = document.getElementById("replay");
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) replayBtn.hidden = true;
+  replayBtn.addEventListener("click", () => {
+    const run = ++playing, start = performance.now(), duration = 5000;
+    replayBtn.disabled = true;
+    (function frame(now) {
+      if (run !== playing) return;
+      const t = Math.min(1, (now - start) / duration);
+      reveal(t);
+      if (t < 1) requestAnimationFrame(frame); else replayBtn.disabled = false;
+    })(start);
+  });
 
   /* Coverage by year */
   const covBox = document.getElementById("cov-chart");

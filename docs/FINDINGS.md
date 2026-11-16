@@ -1,13 +1,9 @@
-# Full findings: when can monthly crime forecasts be trusted?
+# Full findings
 
-A forecasting study of recorded property and violent incidents in Montréal, 2015 to 2026.
+**When can monthly crime forecasts be trusted?** Dora Zhuang
 
-**Author:** Dora Zhuang
-
-Most forecasting write-ups report one accuracy number from one test period. This project asks a
-harder question: across 77 forecast origins and five crime categories, **where do statistical
-models add value over "same month last year", and how far can their uncertainty ranges be
-trusted?**
+Recorded property and violent incidents in Montréal, 2015 to 2026. Every model is refit at 77
+points in time and forecasts 1 to 6 months ahead, using only the data available at that point.
 
 ## Findings
 
@@ -27,8 +23,8 @@ of outcomes fell inside its 80% interval.
 
 **3. Prediction intervals fail exactly when they matter.**
 During 2020 and 2021, nominal 80% intervals from ETS covered 50% and 61% of outcomes. From 2023
-onward they covered 78% to 81%. Interval quality depends on the period, so a single coverage
-number hides the problem.
+onward they covered 78% to 81%. A single coverage number averaged over the whole period would
+hide this.
 
 ![Coverage by year](../figures/fig3_coverage_by_year.png)
 
@@ -55,8 +51,8 @@ total by each district's share of the last 12 months, is the most accurate at di
 | OLS reconciliation | 0.84 | 0.98 | 0.82 | 0.87 |
 | Same month last year | 1.19 | 1.26 | 1.03 | 1.05 |
 
-MASE pooled within each level, same 77 origins and horizons as above. No single method wins at
-every level: bottom-up is clearly worst for the city total, and WLS is best for categories.
+MASE pooled within each level. No method wins at every level: bottom-up is worst for the city
+total, and WLS is best for categories.
 
 **6. For small counts, the distribution matters more than the model.**
 At the finest level (one category in one district), a single gradient-boosting model with a
@@ -86,9 +82,9 @@ over-covers at 87%.
 | Top-down + Poisson | 65.1% | 9.8 | 4.33 |
 
 **7. Which differences are real.**
-Error ratios with 95% intervals from a moving-block bootstrap over the 77 origins (blocks of
-12, because errors at neighbouring origins overlap). An interval that includes 1 means the data
-cannot separate the two methods.
+Error ratios with 95% intervals from a moving-block bootstrap over the 77 origins, in blocks of
+12 because errors at neighbouring origins overlap. An interval that includes 1 means the two
+methods cannot be separated.
 
 | Comparison (first vs second) | Error ratio | 95% interval | Reading |
 |---|---|---|---|
@@ -108,8 +104,8 @@ cannot separate the two methods.
 
 The ensemble is the plain average of the ETS, ARIMA and Theta forecasts. It has the lowest
 citywide MASE (0.98 against 1.01 for ETS) and beats ETS at 71% of origins, but the interval
-just reaches 1. Vehicle theft shows that a method can be far better than the benchmark (ratio
-0.70) and still be a poor forecast in absolute terms (MASE 1.46).
+just reaches 1. On vehicle theft, ETS is far better than the benchmark (ratio 0.70) and still
+a poor forecast in absolute terms (MASE 1.46).
 
 ## Results in numbers
 
@@ -125,9 +121,9 @@ MASE below 1 means the forecast beats the in-sample seasonal naive error.
 | Vehicle theft | 1.46 | 1.42 | 1.40 | 2.09 | 1.45 |
 | **All** | **1.01** | **1.02** | **1.04** | **1.25** | **1.27** |
 
-80% interval calibration for ETS, origins December 2021 to April 2026 (the first two years are
-needed to build a calibration set). The interval score rewards narrow intervals and penalizes
-misses; lower is better.
+80% interval calibration for ETS, origins December 2021 to April 2026; the first two years
+build the calibration set. The interval score rewards narrow intervals and penalizes misses.
+Lower is better.
 
 | Method | Coverage (target 80%) | Interval score |
 |---|---|---|
@@ -160,21 +156,14 @@ misses; lower is better.
 ## Limitations
 
 - The counts are incidents **recorded** by police. They reflect reporting and recording
-  practice as well as underlying crime, and they are not a measure of neighbourhood risk.
-- The SPVM states this dataset is not its official statistics. Incident types can be revised
-  after the initial report, so the most recent months may still change.
-- When one event involves several offences, only the most serious is published.
-- Five districts were merged into neighbours during the period (24 into 26 in 2019, 11 into 9
-  in 2020, 33 into 31 in 2021, 22 into 21 and 55 into 5 later). Their history is mapped to
-  today's boundaries, so district results describe current districts.
-- District intervals were evaluated at the finest level only, with one dispersion value
-  shared by all series. Count intervals are whole numbers, which pushes coverage above target.
-- The bootstrap intervals treat the 77 origins as the sample. They do not cover the choice of
-  test period itself; a different decade could rank methods differently.
-- "Offences causing death" (two or three a month) is excluded as too sparse for these models.
-- The adaptive conformal results start in December 2021, so that method was not tested through
-  the 2020 shock itself.
-- Forecasts here are an accuracy study, not a tool for deploying police resources.
+  practice as well as crime itself.
+- Incident types can be revised after the initial report, so the most recent months may change.
+- Five districts merged into neighbours during the period (24 into 26, 11 into 9, 33 into 31,
+  22 into 21, 55 into 5). Their history is mapped to today's boundaries.
+- District intervals use one dispersion value for all series, which contributes to the
+  negative binomial over-covering.
+- Adaptive conformal results start in December 2021, after the 2020 shock.
+- "Offences causing death" (two or three a month) is excluded as too sparse.
 
 ## Next steps
 
@@ -185,7 +174,7 @@ misses; lower is better.
 ## Data source
 
 [Actes criminels](https://donnees.montreal.ca/dataset/actes-criminels), Service de police de la
-Ville de Montréal, via the Ville de Montréal open data portal. Licensed under
+Ville de Montréal, Ville de Montréal open data portal,
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ## Reference
