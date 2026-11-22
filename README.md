@@ -111,6 +111,7 @@ committed output byte for byte, using the package versions in `requirements.txt`
 python src/run_all.py --skip-download   # about 22 minutes on 4 cores
 python src/verify_outputs.py            # checks every committed output against recorded hashes
 ```
+
 ## Data and license
 
 Data: [Actes criminels](https://donnees.montreal.ca/dataset/actes-criminels), Service de police
