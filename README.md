@@ -99,18 +99,18 @@ python src/run_all.py                   # downloads today's data, then runs ever
 pytest                                  # method checks, no data needed
 ```
 
-The source is updated daily, so a new download shifts the numbers slightly. To reproduce the
-committed results exactly, place the data version recorded in `data/manifest.json` at
-`data/raw/actes_criminels.csv`, then:
+The city replaces this file daily and keeps no earlier versions, so the 15 November 2026
+download used here (`data/manifest.json`) can no longer be retrieved. Its monthly counts by
+category and district are committed in `data/snapshots/`. Rerunning `python src/run_all.py`
+downloads the current file, so recent numbers may differ slightly from the committed results.
+
+With that exact file at `data/raw/actes_criminels.csv`, the steps below reproduce every
+committed output byte for byte, using the package versions in `requirements.txt`:
 
 ```bash
 python src/run_all.py --skip-download   # about 22 minutes on 4 cores
 python src/verify_outputs.py            # checks every committed output against recorded hashes
 ```
-
-With the package versions in `requirements.txt`, a fresh clone reproduces every committed
-result, figure and the summary page byte for byte.
-
 ## Data and license
 
 Data: [Actes criminels](https://donnees.montreal.ca/dataset/actes-criminels), Service de police
