@@ -1,12 +1,20 @@
-"""Build monthly count series from the raw SPVM incident file."""
+"""Build monthly count series from the raw SPVM incident file, or from the frozen snapshot.
+
+The analysis only uses each incident's month, category and district. The committed snapshot
+of the download recorded in data/manifest.json holds exactly those counts, so when the raw
+file is absent the incidents are rebuilt from it and every step runs unchanged.
+"""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_PATH = ROOT / "data" / "raw" / "actes_criminels.csv"
+MANIFEST_PATH = ROOT / "data" / "manifest.json"
+SNAPSHOTS = ROOT / "data" / "snapshots"
 
 CATEGORY_LABELS = {
     "Introduction": "Break and enter",
@@ -20,8 +28,38 @@ CATEGORY_LABELS = {
 EXCLUDED_FROM_FORECASTS = ["Offences causing death"]
 
 
+def frozen_snapshot() -> Path:
+    """The committed snapshot taken from the download recorded in data/manifest.json."""
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    for meta_path in sorted(SNAPSHOTS.glob("*.json")):
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        if (meta.get("sha256") == manifest["sha256"]
+                and meta.get("downloaded_utc") == manifest["downloaded_utc"]):
+            return meta_path.with_suffix(".csv.gz")
+    raise FileNotFoundError("No snapshot matches data/manifest.json")
+
+
+def incidents_from_snapshot(path: Path) -> pd.DataFrame:
+    """One row per incident, with DATE set to the first day of its month.
+
+    Only the month, category and district are kept, which is all the analysis uses.
+    """
+    snap = pd.read_csv(path)
+    rows = snap.loc[snap.index.repeat(snap["count"])]
+    return pd.DataFrame({"CATEGORIE": rows["category"].to_numpy(),
+                         "DATE": pd.to_datetime(rows["month"].to_numpy()),
+                         "PDQ": rows["pdq"].to_numpy()})
+
+
 def load_incidents(path: Path = RAW_PATH) -> pd.DataFrame:
-    df = pd.read_csv(path, parse_dates=["DATE"])
+    if path.exists():
+        df = pd.read_csv(path, parse_dates=["DATE"])
+    elif path == RAW_PATH:
+        snapshot = frozen_snapshot()
+        print(f"{path.name} not found: rebuilding incidents from {snapshot.relative_to(ROOT)}")
+        df = incidents_from_snapshot(snapshot)
+    else:
+        raise FileNotFoundError(path)
     df["category"] = df["CATEGORIE"].map(CATEGORY_LABELS)
     if df["category"].isna().any():
         unknown = sorted(df.loc[df["category"].isna(), "CATEGORIE"].unique())

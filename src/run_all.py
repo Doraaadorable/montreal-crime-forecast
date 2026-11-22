@@ -2,7 +2,8 @@
 
 Usage:
     python src/run_all.py                  # download, then every analysis step
-    python src/run_all.py --skip-download  # reuse data/raw/actes_criminels.csv
+    python src/run_all.py --skip-download  # reuse data/raw/actes_criminels.csv, or rebuild
+                                           # the data from the frozen snapshot if it is absent
 """
 from __future__ import annotations
 

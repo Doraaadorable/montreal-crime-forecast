@@ -22,21 +22,40 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOTS = ROOT / "data" / "snapshots"
 RAW = ROOT / "data" / "raw" / "actes_criminels.csv"
+MANIFEST = ROOT / "data" / "manifest.json"
 KEYS = ["month", "category", "pdq"]
+
+
+def download_time(raw: Path, digest: str) -> tuple[datetime, str]:
+    """When the raw file was downloaded, and where that time comes from.
+
+    The manifest written by download_data.py records the download time and the file's hash.
+    A file's modification time changes when it is copied, so it is used only when the
+    manifest does not describe this file.
+    """
+    if MANIFEST.exists():
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        if manifest.get("sha256") == digest:
+            stamp = datetime.strptime(manifest["downloaded_utc"], "%Y-%m-%dT%H:%M:%SZ")
+            return stamp.replace(tzinfo=timezone.utc), "manifest"
+    return datetime.fromtimestamp(raw.stat().st_mtime, tz=timezone.utc), "file modification time"
 
 
 def take_snapshot(raw: Path = RAW) -> Path:
     df = pd.read_csv(raw, parse_dates=["DATE"])
-    downloaded = datetime.fromtimestamp(raw.stat().st_mtime, tz=timezone.utc)
+    digest = hashlib.sha256(raw.read_bytes()).hexdigest()
+    downloaded, source = download_time(raw, digest)
     counts = (df.assign(month=df["DATE"].dt.strftime("%Y-%m"), pdq=df["PDQ"].astype("Int64"))
               .rename(columns={"CATEGORIE": "category"})
               .groupby(KEYS, dropna=False).size().rename("count").reset_index())
     SNAPSHOTS.mkdir(parents=True, exist_ok=True)
     stem = f"{downloaded:%Y-%m-%d}"
     counts.to_csv(SNAPSHOTS / f"{stem}.csv.gz", index=False)
-    meta = {"downloaded_utc": f"{downloaded:%Y-%m-%dT%H:%M:%SZ}", "rows": len(df),
-            "last_incident_date": f"{df['DATE'].max():%Y-%m-%d}",
-            "sha256": hashlib.sha256(raw.read_bytes()).hexdigest()}
+    meta = {"downloaded_utc": f"{downloaded:%Y-%m-%dT%H:%M:%SZ}",
+            "downloaded_utc_source": source,
+            "snapshot_created_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%M:%SZ}",
+            "rows": len(df), "last_incident_date": f"{df['DATE'].max():%Y-%m-%d}",
+            "sha256": digest}
     (SNAPSHOTS / f"{stem}.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     print(f"Snapshot {stem}: {len(df):,} incidents, {len(counts):,} cells")
     return SNAPSHOTS / f"{stem}.csv.gz"

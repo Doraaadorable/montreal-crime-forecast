@@ -1,9 +1,12 @@
 """Checks on the pieces of the study that are easy to get subtly wrong."""
+import json
+
 import numpy as np
 import pandas as pd
 
 from calibrate import MIN_CALIBRATION, calibrate_group, conformal_quantile
 from count_models import nb_dispersion
+from data import MANIFEST_PATH, frozen_snapshot, incidents_from_snapshot
 from hierarchy import build_hierarchy, projection, reconcile
 from significance import block_bootstrap_ratio
 
@@ -94,3 +97,10 @@ def test_bootstrap_ratio_brackets_the_point_estimate():
     assert np.isclose(ratio, 0.9) and np.isclose(lo, 0.9) and np.isclose(hi, 0.9)
     ratio, lo, hi = block_bootstrap_ratio(b * rng.uniform(0.7, 1.1, 77), b)
     assert lo < ratio < hi
+
+
+def test_frozen_snapshot_holds_every_incident_of_the_recorded_download():
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    incidents = incidents_from_snapshot(frozen_snapshot())
+    assert len(incidents) == manifest["rows"]
+    assert incidents["DATE"].min() == pd.Timestamp(manifest["first_incident_date"][:7] + "-01")

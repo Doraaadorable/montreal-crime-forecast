@@ -100,17 +100,19 @@ pytest                                  # method checks, no data needed
 ```
 
 The city replaces this file daily and keeps no earlier versions, so the 15 November 2026
-download used here (`data/manifest.json`) can no longer be retrieved. Its monthly counts by
-category and district are committed in `data/snapshots/`. Rerunning `python src/run_all.py`
-downloads the current file, so recent numbers may differ slightly from the committed results.
-
-With that exact file at `data/raw/actes_criminels.csv`, the steps below reproduce every
-committed output byte for byte, using the package versions in `requirements.txt`:
+download used here (`data/manifest.json`) can no longer be retrieved. The analysis only uses
+each incident's month, category and district, and those counts are committed in
+`data/snapshots/2026-11-15.csv.gz`. Without the raw file, the pipeline rebuilds the data from
+that snapshot, and a fresh clone reproduces every committed result, figure and the summary
+page byte for byte, using the package versions in `requirements.txt`:
 
 ```bash
 python src/run_all.py --skip-download   # about 22 minutes on 4 cores
 python src/verify_outputs.py            # checks every committed output against recorded hashes
 ```
+
+Rerunning without `--skip-download` downloads the current file, so recent numbers may differ
+slightly from the committed results.
 
 ## Data and license
 
