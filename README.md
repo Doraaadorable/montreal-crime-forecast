@@ -103,8 +103,9 @@ The city replaces this file daily and keeps no earlier versions, so the 15 Novem
 download used here (`data/manifest.json`) can no longer be retrieved. The analysis only uses
 each incident's month, category and district, and those counts are committed in
 `data/snapshots/2026-11-15.csv.gz`. Without the raw file, the pipeline rebuilds the data from
-that snapshot, and a fresh clone reproduces every committed result, figure and the summary
-page byte for byte, using the package versions in `requirements.txt`:
+that snapshot, so a fresh clone reproduces the committed results with the package versions in
+`requirements.txt`. On a machine like the one in `results/environment.txt`, every output
+matches byte for byte:
 
 ```bash
 python src/run_all.py --skip-download   # about 22 minutes on 4 cores
@@ -120,6 +121,13 @@ table matches the committed one within numerical tolerance. Byte-for-byte identi
 reported as well; it is not required, because floating-point results can vary slightly
 between machines. The log, the comparison report and the machine details are saved with
 each run.
+
+On its [first run](https://github.com/Doraaadorable/montreal-crime-forecast/actions/runs/45104294680)
+(23 November 2026, a different CPU), all 39 outputs were regenerated. All 30 result tables
+and the summary page were byte-identical, so every number reported here was reproduced
+exactly. Two of the three forecast files differed by at most 0.0002 incidents, below the
+precision at which forecasts are stored, and the five figures differed only in image
+encoding.
 
 ## Data and license
 
