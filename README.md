@@ -125,8 +125,9 @@ each run.
 On its [first run](https://github.com/Doraaadorable/montreal-crime-forecast/actions/runs/45104294680)
 (23 November 2026, a different CPU), all 39 outputs were regenerated. All 30 result tables
 and the summary page were byte-identical, so every number reported here was reproduced
-exactly. Two of the three forecast files differed by at most 0.0002 in any value, and the five figures
-differed only in image encoding.
+exactly. Two of the three forecast files had a largest absolute difference of about
+0.00021, and the five figures were regenerated but not byte-identical; this run did not
+compare their pixels.
 
 ## Data and license
 
