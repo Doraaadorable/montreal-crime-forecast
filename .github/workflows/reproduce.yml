@@ -1,0 +1,59 @@
+name: reproduce
+# Rerun the whole study from the frozen snapshot on a clean machine and compare every output
+# with the committed one. Start it from the Actions tab ("Run workflow"). About 30 minutes.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"   # the version recorded in results/environment.txt
+      - run: pip install -r requirements.txt
+      - name: Record the machine and packages
+        run: |
+          {
+            echo "python $(python -c 'import platform; print(platform.python_version())')"
+            echo "platform $(python -c 'import platform; print(platform.platform())')"
+            echo "cpu $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs) x $(nproc)"
+            echo "commit $GITHUB_SHA"
+          } > machine.txt
+          pip freeze > pip-freeze.txt
+          cat machine.txt
+      - name: Delete every committed output
+        run: |
+          git ls-files results figures docs/index.html \
+            | grep -v -x -e results/output_hashes.sha256 -e results/environment.txt > outputs.txt
+          echo "Deleting $(wc -l < outputs.txt) outputs"
+          xargs rm -f < outputs.txt
+      - name: Rerun the study from the frozen snapshot
+        run: python src/run_all.py --skip-download 2>&1 | tee run.log
+      - name: Compare with the committed outputs (tables within tolerance)
+        run: python src/reproduce_check.py
+      - name: Byte-for-byte check (reported, not required)
+        if: always()
+        continue-on-error: true
+        run: python src/verify_outputs.py 2>&1 | tee verify.txt
+      - name: Write the summary
+        if: always()
+        run: |
+          cat machine.txt >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
+          [ -f reproduce_report.md ] && cat reproduce_report.md >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
+          echo "Byte-for-byte: $(head -1 verify.txt 2>/dev/null)" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reproduction-evidence
+          path: |
+            machine.txt
+            pip-freeze.txt
+            run.log
+            reproduce_report.md
+            verify.txt

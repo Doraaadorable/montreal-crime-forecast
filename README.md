@@ -114,6 +114,13 @@ python src/verify_outputs.py            # checks every committed output against 
 Rerunning without `--skip-download` downloads the current file, so recent numbers may differ
 slightly from the committed results.
 
+The `reproduce` workflow (Actions tab, "Run workflow") does this on a clean GitHub machine: it
+deletes every committed output, reruns the study from the snapshot, and checks that each
+table matches the committed one within numerical tolerance. Byte-for-byte identity is
+reported as well; it is not required, because floating-point results can vary slightly
+between machines. The log, the comparison report and the machine details are saved with
+each run.
+
 ## Data and license
 
 Data: [Actes criminels](https://donnees.montreal.ca/dataset/actes-criminels), Service de police

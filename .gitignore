@@ -5,3 +5,4 @@ __pycache__/
 results/hierarchy_*forecasts.parquet
 site/_artifact.html
 .pytest_cache/
+reproduce_report.md
