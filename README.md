@@ -125,12 +125,12 @@ and compared pixel by pixel, and numbers in the summary
 page are compared within the same tolerance. The log, the comparison report, the machine
 details and the regenerated figures, next to the committed ones, are saved with each run.
 
-On its [first run](https://github.com/Doraaadorable/montreal-crime-forecast/actions/runs/45104294680)
-(23 November 2026, a different CPU), all 39 outputs were regenerated. All 30 result tables
-and the summary page were byte-identical, so every number reported here was reproduced
-exactly. Two of the three forecast files had a largest absolute difference of about
-0.00021, and the five figures were regenerated but not byte-identical; this run did not
-compare their pixels.
+On a [clean GitHub machine](https://github.com/Doraaadorable/montreal-crime-forecast/actions/runs/45144160590)
+(23 November 2026, a different CPU from the one in `results/environment.txt`), all 39
+outputs were regenerated and 37 matched byte for byte: all 30 result tables, the five
+figures and the summary page. The other two, forecast files, had a largest absolute
+difference of about 0.00021. An earlier run had shown that the figures depended on a font
+setting outside the repository; the font is now bundled.
 
 ## Data and license
 
