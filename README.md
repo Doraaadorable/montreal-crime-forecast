@@ -128,8 +128,8 @@ details and the regenerated figures, next to the committed ones, are saved with 
 On a [clean GitHub machine](https://github.com/Doraaadorable/montreal-crime-forecast/actions/runs/45144160590)
 (23 November 2026, a different CPU from the one in `results/environment.txt`), all 39
 outputs were regenerated and 37 matched byte for byte: all 30 result tables, the five
-figures and the summary page. The other two, forecast files, had a largest absolute
-difference of about 0.00021. An earlier run had shown that the figures depended on a font
+figures, the summary page and one of the three forecast files. The other two forecast files
+had a largest absolute difference of about 0.00021. An earlier run had shown that the figures depended on a font
 setting outside the repository; the font is now bundled.
 
 ## Data and license
