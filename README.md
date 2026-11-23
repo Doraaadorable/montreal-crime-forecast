@@ -125,8 +125,7 @@ each run.
 On its [first run](https://github.com/Doraaadorable/montreal-crime-forecast/actions/runs/45104294680)
 (23 November 2026, a different CPU), all 39 outputs were regenerated. All 30 result tables
 and the summary page were byte-identical, so every number reported here was reproduced
-exactly. Two of the three forecast files differed by at most 0.0002 incidents, around the seventh
-significant digit of forecasts of a few hundred incidents a month, and the five figures
+exactly. Two of the three forecast files differed by at most 0.0002 in any value, and the five figures
 differed only in image encoding.
 
 ## Data and license
