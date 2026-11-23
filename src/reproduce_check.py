@@ -10,9 +10,13 @@ whole study and then runs this script. Each output gets one of these verdicts:
                       single precision and come from numerical optimisers, so another
                       machine can move them in the fifth significant digit; a change in a
                       result is far larger than that
-    differs           a table with a larger difference, missing columns or rows
-    regenerated       figures and the HTML page that are not byte-identical; a new CPU or
-                      library build can change image encoding without changing the data
+    same pixels       figures only: not byte-identical, but the decoded images are equal
+    pixels differ     figures only: same size, and at most 5% of pixels differ. Forecasts
+                      that move in the fifth significant digit can shift a line by a
+                      fraction of a pixel; the share of changed pixels is reported
+    differs           a table with a larger difference, missing columns or rows; a figure
+                      of another size, unreadable, or with more than 5% of pixels changed;
+                      a page whose text differs, or whose numbers differ beyond tolerance
     missing           the rerun did not write the file
 
 The check fails on "differs" or "missing". Byte-identity of every file is reported but not
@@ -25,6 +29,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -32,12 +37,16 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from PIL import Image
+
 from verify_outputs import tracked_outputs
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "reproduce_report.md"
 RTOL = 1e-4
 ATOL = 1e-6
+MAX_CHANGED_PIXELS = 0.05
+NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 
 
 def committed(path: str) -> bytes:
@@ -81,6 +90,39 @@ def compare_tables(new: pd.DataFrame, old: pd.DataFrame, rounded: bool) -> tuple
     return "differs", f"max abs difference {diff.max():.3g}"
 
 
+def compare_images(new_bytes: bytes, old_bytes: bytes) -> tuple[str, str]:
+    try:
+        new = np.asarray(Image.open(io.BytesIO(new_bytes)).convert("RGBA"), dtype=np.int16)
+        old = np.asarray(Image.open(io.BytesIO(old_bytes)).convert("RGBA"), dtype=np.int16)
+    except OSError as exc:
+        return "differs", f"cannot decode image ({exc})"
+    if new.shape != old.shape:
+        return "differs", f"size {old.shape[1]}x{old.shape[0]} -> {new.shape[1]}x{new.shape[0]}"
+    changed = np.any(new != old, axis=2)
+    share = float(changed.mean())
+    if share == 0:
+        return "same pixels", "decoded images are equal"
+    detail = (f"{share:.3%} of pixels changed ({int(changed.sum())} of {changed.size}), "
+              f"largest channel change {int(np.abs(new - old).max())} of 255")
+    return ("pixels differ" if share <= MAX_CHANGED_PIXELS else "differs"), detail
+
+
+def compare_page(new_text: str, old_text: str) -> tuple[str, str]:
+    """Same text once numbers are masked, and numbers equal within tolerance."""
+    if NUMBER.sub("#", new_text) != NUMBER.sub("#", old_text):
+        return "differs", "text differs"
+    new_nums, old_nums = NUMBER.findall(new_text), NUMBER.findall(old_text)
+    worst = 0.0
+    for a, b in zip(new_nums, old_nums):
+        x, y = float(a), float(b)
+        places = len(b.split(".")[1]) if "." in b else 0
+        allowed = max(RTOL * abs(y) + ATOL, 10.0 ** -places * 1.0001)
+        if abs(x - y) > allowed:
+            return "differs", f"number {b} -> {a}"
+        worst = max(worst, abs(x - y))
+    return "within tolerance", f"text equal; largest number difference {worst:g}"
+
+
 def check(path: str) -> tuple[str, str]:
     new_path = ROOT / path
     if not new_path.exists():
@@ -97,7 +139,11 @@ def check(path: str) -> tuple[str, str]:
         new = pd.read_parquet(io.BytesIO(new_bytes))
         old = pd.read_parquet(io.BytesIO(old_bytes))
         return compare_tables(new, old, rounded=False)
-    return "regenerated", "not byte-identical (image or page encoding)"
+    if path.endswith(".png"):
+        return compare_images(new_bytes, old_bytes)
+    if path.endswith(".html"):
+        return compare_page(new_bytes.decode("utf-8"), old_bytes.decode("utf-8"))
+    return "differs", "no comparison defined for this file type"
 
 
 def main() -> int:

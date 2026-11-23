@@ -27,6 +27,7 @@ jobs:
           cat machine.txt
       - name: Delete every committed output
         run: |
+          mkdir -p committed && cp -r figures docs/index.html committed/
           git ls-files results figures docs/index.html \
             | grep -v -x -e results/output_hashes.sha256 -e results/environment.txt > outputs.txt
           echo "Deleting $(wc -l < outputs.txt) outputs"
@@ -57,3 +58,6 @@ jobs:
             run.log
             reproduce_report.md
             verify.txt
+            figures/
+            docs/index.html
+            committed/
