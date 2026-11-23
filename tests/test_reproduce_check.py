@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-from reproduce_check import compare_images, compare_page, compare_tables
+from reproduce_check import compare_images, compare_page, compare_tables, report
 
 
 def png(pixels: np.ndarray, **save_options) -> bytes:
@@ -27,7 +27,7 @@ def test_image_changes_are_graded_by_share_of_pixels():
     small[0, :10] = 0                      # 0.1% of pixels
     large = base.copy()
     large[:20] = 0                         # 20% of pixels
-    assert compare_images(png(small), png(base))[0] == "pixels differ"
+    assert compare_images(png(small), png(base))[0] == "needs review"
     assert compare_images(png(large), png(base))[0] == "differs"
     assert compare_images(png(base[:50]), png(base))[0] == "differs"   # other size
     assert compare_images(b"not an image", png(base))[0] == "differs"
@@ -47,3 +47,14 @@ def test_tables_allow_one_unit_in_the_last_decimal_only():
     assert compare_tables(near, old, rounded=True)[0] == "within tolerance"
     assert compare_tables(far, old, rounded=True)[0] == "differs"
     assert compare_tables(old.iloc[:1], old, rounded=True)[0] == "differs"
+
+
+def test_figures_to_review_pass_but_are_listed():
+    rows = [("results/a.csv", "identical", ""),
+            ("figures/b.png", "needs review", "0.100% of pixels changed")]
+    lines, code = report(rows)
+    assert code == 0
+    assert "**Result: PASSED, 1 figure to review by eye**" in lines
+    assert "- `figures/b.png`: 0.100% of pixels changed" in lines
+    lines, code = report(rows + [("results/c.csv", "differs", "shape")])
+    assert code == 1 and lines[4].startswith("**Result: FAILED")

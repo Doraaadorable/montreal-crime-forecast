@@ -121,8 +121,9 @@ table matches the committed one within numerical tolerance. Byte-for-byte identi
 reported as well; it is not required, because floating-point results can vary slightly
 between machines. The figures use the Inter font bundled in `fonts/` (SIL Open Font
 License), so they do not depend on the fonts installed on the machine. Figures are decoded
-and compared pixel by pixel, and numbers in the summary
-page are compared within the same tolerance. The log, the comparison report, the machine
+and compared pixel by pixel: one with up to 5% of pixels changed passes but is listed for
+review by eye, and one with more changes or another size fails. Numbers in the summary page
+are compared within the same tolerance as the tables. The log, the comparison report, the machine
 details and the regenerated figures, next to the committed ones, are saved with each run.
 
 On a [clean GitHub machine](https://github.com/Doraaadorable/montreal-crime-forecast/actions/runs/45144160590)

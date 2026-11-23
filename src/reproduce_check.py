@@ -11,15 +11,19 @@ whole study and then runs this script. Each output gets one of these verdicts:
                       machine can move them in the fifth significant digit; a change in a
                       result is far larger than that
     same pixels       figures only: not byte-identical, but the decoded images are equal
-    pixels differ     figures only: same size, and at most 5% of pixels differ. Forecasts
-                      that move in the fifth significant digit can shift a line by a
-                      fraction of a pixel; the share of changed pixels is reported
+    needs review      figures only: same size, and at most 5% of pixels differ. This does
+                      not fail the check, because forecasts that move in the fifth
+                      significant digit can shift a line by a fraction of a pixel, but a
+                      small change can also be a real one (a legend entry, a point on a
+                      curve), so these figures are listed for a person to look at, with the
+                      share of changed pixels
     differs           a table with a larger difference, missing columns or rows; a figure
                       of another size, unreadable, or with more than 5% of pixels changed;
                       a page whose text differs, or whose numbers differ beyond tolerance
     missing           the rerun did not write the file
 
-The check fails on "differs" or "missing". Byte-identity of every file is reported but not
+The check fails on "differs" or "missing", and flags "needs review" in the report, in the
+run summary and as a warning on the run. Byte-identity of every file is reported but not
 required, because floating-point results can vary slightly across machines.
 
 Usage:
@@ -104,7 +108,7 @@ def compare_images(new_bytes: bytes, old_bytes: bytes) -> tuple[str, str]:
         return "same pixels", "decoded images are equal"
     detail = (f"{share:.3%} of pixels changed ({int(changed.sum())} of {changed.size}), "
               f"largest channel change {int(np.abs(new - old).max())} of 255")
-    return ("pixels differ" if share <= MAX_CHANGED_PIXELS else "differs"), detail
+    return ("needs review" if share <= MAX_CHANGED_PIXELS else "differs"), detail
 
 
 def compare_page(new_text: str, old_text: str) -> tuple[str, str]:
@@ -146,20 +150,37 @@ def check(path: str) -> tuple[str, str]:
     return "differs", "no comparison defined for this file type"
 
 
-def main() -> int:
-    rows = [(path, *check(path)) for path in tracked_outputs()]
+def report(rows: list[tuple[str, str, str]]) -> tuple[list[str], int]:
+    """Markdown report lines and the exit code for (path, verdict, detail) rows."""
     counts = pd.Series([r[1] for r in rows]).value_counts()
     failed = [r for r in rows if r[1] in ("differs", "missing")]
+    review = [r for r in rows if r[1] == "needs review"]
+    result = "FAILED" if failed else "PASSED"
+    if review:
+        result += f", {len(review)} figure{'s' if len(review) > 1 else ''} to review by eye"
     lines = ["# Reproduction check", "",
              f"Outputs checked: {len(rows)}. " + ", ".join(f"{k}: {v}" for k, v in counts.items()) + ".",
-             "", "**Result: " + ("FAILED" if failed else "PASSED") + "**", "",
-             "| Output | Verdict | Detail |", "|---|---|---|"]
+             "", f"**Result: {result}**", ""]
+    if review:
+        lines += ["Compare these with the committed versions in the run's artifact "
+                  "(`figures/` against `committed/figures/`):", ""]
+        lines += [f"- `{p}`: {d}" for p, _, d in review] + [""]
+    lines += ["| Output | Verdict | Detail |", "|---|---|---|"]
     lines += [f"| `{p}` | {v} | {d} |" for p, v, d in rows]
+    return lines, 1 if failed else 0
+
+
+def main() -> int:
+    rows = [(path, *check(path)) for path in tracked_outputs()]
+    lines, code = report(rows)
     REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines[:5]))
-    for p, v, d in failed:
-        print(f"  {v}: {p} ({d})")
-    return 1 if failed else 0
+    for p, v, d in rows:
+        if v in ("differs", "missing"):
+            print(f"  {v}: {p} ({d})")
+        elif v == "needs review":
+            print(f"::warning file={p}::Figure needs review: {d}")  # shown on the GitHub run
+    return code
 
 
 if __name__ == "__main__":
