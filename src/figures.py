@@ -9,12 +9,14 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib import font_manager
 
 from data import load_incidents, monthly_by_category
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 FIGURES = ROOT / "figures"
+FONTS = ROOT / "fonts"  # Inter 4.0, regular and bold (SIL OFL 1.1, see fonts/LICENSE-Inter.txt)
 
 SURFACE = "#fcfcfb"
 INK = "#0b0b0b"
@@ -35,8 +37,15 @@ MODEL_LABELS = {
     "Naive": "Last month",
 }
 
+# Register the bundled font so the figures do not depend on the fonts or the matplotlib
+# configuration of the machine they are drawn on.
+for font_file in sorted(FONTS.glob("*.otf")):
+    font_manager.fontManager.addfont(str(font_file))
+
 plt.rcParams.update(
     {
+        "font.family": ["Inter", "DejaVu Sans"],
+        "text.hinting": "no_hinting",
         "figure.facecolor": SURFACE,
         "axes.facecolor": SURFACE,
         "savefig.facecolor": SURFACE,
